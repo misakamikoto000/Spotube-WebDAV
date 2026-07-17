@@ -1,20 +1,19 @@
 <div align="center">
-  <img width="600" src="assets/branding/spotube_banner.png" alt="Spotube Logo">
+  <img width="600" src="assets/branding/spotube_banner.png" alt="Spotube WebDAV Logo">
 
-A cross-platform extensible open-source music streaming platform.<br>
-Bring your own music metadata/playlist/audio-source with plugins created by community or by yourself. A small step towards the decentralized music streaming era!
+  <h1>Spotube WebDAV</h1>
 
-Btw it's not just another Electron app 😉
+  <strong>A local-first WebDAV music player for Windows and Android.</strong><br>
+  Scan your cloud music library, enrich it with locally cached metadata,
+  artwork and lyrics, and identify Lossless and Hi-Res audio.<br><br>
+  <strong>面向 Windows 与 Android 的本地优先 WebDAV 音乐播放器。</strong><br>
+  扫描云端曲库，在设备本地匹配歌曲信息、封面与歌词，并识别无损及 Hi-Res 音质。
 
-<a href="https://spotube.krtirtho.dev"><img alt="Visit the website" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/website_vector.svg"></a>
-<a href="https://discord.gg/uJ94vxB6vg"><img alt="Discord Server" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-plural_vector.svg"></a>
-
-<a href="https://patreon.com/krtirtho"><img alt="Support me on Patron" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/donate/patreon-singular_vector.svg"></a>
-<a href="https://www.buymeacoffee.com/krtirtho"><img alt="Buy me a Coffee" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/donate/buymeacoffee-singular_vector.svg"></a>
-
-[![HackerNews](https://hackerbadge.vercel.app/api?id=39066136&type=dark)](https://news.ycombinator.com/item?id=39066136)
-
-<a href="https://opencollective.com/spotube"><img src="https://opencollective.com/spotube/donate/button.png?color=blue" alt="Donate to our Open Collective" height="45"></a>
+  <br>
+  <img alt="Windows and Android" src="https://img.shields.io/badge/platform-Windows%20%7C%20Android-315CF5">
+  <img alt="WebDAV library" src="https://img.shields.io/badge/library-WebDAV-6C5CE7">
+  <img alt="Local metadata" src="https://img.shields.io/badge/metadata-local--first-17A673">
+  <img alt="BSD-4-Clause" src="https://img.shields.io/badge/license-BSD--4--Clause-blue">
 
 ---
 
