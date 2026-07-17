@@ -12,13 +12,13 @@ import 'package:spotube/provider/metadata_plugin/utils/common.dart';
 
 @RoutePage()
 class AlbumPage extends HookConsumerWidget {
-  static const name = "album";
+  static const name = 'album';
 
   final SpotubeSimpleAlbumObject album;
   final String id;
   const AlbumPage({
     super.key,
-    @PathParam("id") required this.id,
+    @PathParam('id') required this.id,
     required this.album,
   });
 
@@ -46,7 +46,7 @@ class AlbumPage extends HookConsumerWidget {
           ),
           title: album.name,
           description:
-              "${context.l10n.released} • ${album.releaseDate} • ${album.artists.first.name}",
+              '${context.l10n.released} · ${album.releaseDate} · ${album.artists.first.name}',
           tracks: tracks.asData?.value.items ?? [],
           error: tracks.error,
           pagination: PaginationProps(
@@ -62,7 +62,7 @@ class AlbumPage extends HookConsumerWidget {
               ref.invalidate(metadataPluginAlbumTracksProvider(album.id));
             },
           ),
-          routePath: "/album/${album.id}",
+          routePath: '/album/${album.id}',
           shareUrl: album.externalUri,
           isLiked: isSavedAlbum.asData?.value ?? false,
           owner: album.artists.first.name,

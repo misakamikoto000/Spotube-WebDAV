@@ -9,12 +9,14 @@ import 'package:spotube/modules/stats/top/tracks.dart';
 import 'package:spotube/extensions/context.dart';
 
 import 'package:spotube/provider/history/top.dart';
+import 'package:spotube/utils/platform.dart';
 
 class StatsPageTopSection extends HookConsumerWidget {
   const StatsPageTopSection({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
+    final windowsStage = useImmersiveUi(context);
     final selectedIndex = useState(0);
     final historyDuration = ref.watch(playbackHistoryTopDurationProvider);
     final historyDurationNotifier =
@@ -61,7 +63,9 @@ class StatsPageTopSection extends HookConsumerWidget {
           SliverAppBar(
             floating: true,
             elevation: 0,
-            backgroundColor: context.theme.colorScheme.background,
+            backgroundColor: windowsStage
+                ? Colors.transparent
+                : context.theme.colorScheme.background,
             automaticallyImplyLeading: false,
             flexibleSpace: Padding(
               padding: const EdgeInsets.all(8.0),

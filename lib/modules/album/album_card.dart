@@ -12,6 +12,7 @@ import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/audio_player/querying_track_info.dart';
 import 'package:spotube/provider/connect/connect.dart';
 import 'package:spotube/provider/history/history.dart';
+import 'package:spotube/provider/local_library/local_library_catalog.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/metadata_plugin/tracks/album.dart';
 import 'package:spotube/services/audio_player/audio_player.dart';
@@ -41,6 +42,14 @@ class AlbumCard extends HookConsumerWidget {
     final playlistNotifier = ref.watch(audioPlayerProvider.notifier);
     final historyNotifier = ref.read(playbackHistoryActionsProvider);
     final isFetchingActiveTrack = ref.watch(queryingTrackInfoProvider);
+    final localCollection = ref.watch(
+      localLibraryCatalogProvider.select((catalog) {
+        final location = catalog.albumLocationsById[album.id];
+        return location == null
+            ? null
+            : catalog.collectionForLocation(location);
+      }),
+    );
 
     final isPlaylistPlaying = useMemoized<bool>(
       () => playlist.containsCollection(album.id),
@@ -50,11 +59,12 @@ class AlbumCard extends HookConsumerWidget {
     final updating = useState(false);
 
     final fetchAllTrack = useCallback(() async {
+      if (localCollection != null) return localCollection.tracks;
       await ref.read(metadataPluginAlbumTracksProvider(album.id).future);
       return ref
           .read(metadataPluginAlbumTracksProvider(album.id).notifier)
           .fetchAll();
-    }, [album.id, ref]);
+    }, [album.id, localCollection, ref]);
 
     final imageUrl = useMemoized(
       () => album.images.from200PxTo300PxOrSmallestImage(
@@ -68,8 +78,13 @@ class AlbumCard extends HookConsumerWidget {
     final description = "${album.albumType.name} • ${album.artists.asString()}";
 
     final onTap = useCallback(() {
-      context.navigateTo(AlbumRoute(id: album.id, album: album));
-    }, [context, album]);
+      if (localCollection != null) {
+        context
+            .navigateTo(LocalLibraryRoute(location: localCollection.location));
+      } else {
+        context.navigateTo(AlbumRoute(id: album.id, album: album));
+      }
+    }, [context, album, localCollection]);
 
     final onPlaybuttonPressed = useCallback(() async {
       updating.value = true;
@@ -81,6 +96,13 @@ class AlbumCard extends HookConsumerWidget {
         final fetchedTracks = await fetchAllTrack();
 
         if (fetchedTracks.isEmpty || !context.mounted) return;
+
+        if (localCollection != null) {
+          await playlistNotifier.load(fetchedTracks, autoPlay: true);
+          playlistNotifier.addCollection(album.id);
+          historyNotifier.addAlbums([album]);
+          return;
+        }
 
         final isRemoteDevice = await showSelectDeviceDialog(context, ref);
         if (isRemoteDevice == null) return;
@@ -110,7 +132,8 @@ class AlbumCard extends HookConsumerWidget {
       playlistNotifier,
       album,
       historyNotifier,
-      updating
+      updating,
+      localCollection,
     ]);
 
     final onAddToQueuePressed = useCallback(() async {

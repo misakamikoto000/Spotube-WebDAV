@@ -11,6 +11,8 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:spotube/provider/user_preferences/user_preferences_provider.dart';
+import 'package:spotube/provider/local_library/local_library_catalog.dart';
+import 'package:spotube/provider/webdav/webdav_library_provider.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart' show FrbException;
 import 'package:spotube/utils/service_utils.dart';
@@ -44,15 +46,24 @@ typedef MetadataFile = ({
 final localTracksProvider =
     FutureProvider<Map<String, List<SpotubeLocalTrackObject>>>((ref) async {
   try {
-    if (kIsWeb) return {};
     final Map<String, List<SpotubeLocalTrackObject>> libraryToTracks = {};
+    final webDavTracks = ref.watch(webDavLibraryProvider);
+    for (final entry in webDavTracks.entries) {
+      libraryToTracks[webDavLibraryLocationKey(entry.key)] = entry.value;
+    }
+    final localCatalog = ref.watch(localLibraryCatalogProvider);
+    for (final entry in localCatalog.collectionsByLocation.entries) {
+      libraryToTracks[entry.key] = entry.value.tracks;
+    }
+
+    if (kIsWeb) return libraryToTracks;
 
     final downloadLocation = ref.watch(
       userPreferencesProvider.select((s) => s.downloadLocation),
     );
 
     if (downloadLocation.isEmpty) {
-      return {};
+      return libraryToTracks;
     }
 
     final downloadDir = Directory(downloadLocation);

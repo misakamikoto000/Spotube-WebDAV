@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:shadcn_flutter/shadcn_flutter_extension.dart';
 import 'package:spotube/components/titlebar/titlebar.dart';
+import 'package:spotube/components/windows/windows_detail_backdrop.dart';
 import 'package:spotube/components/track_presentation/presentation_list.dart';
 import 'package:spotube/components/track_presentation/presentation_props.dart';
 import 'package:spotube/components/track_presentation/presentation_top.dart';
@@ -23,6 +24,7 @@ class TrackPresentation extends HookConsumerWidget {
     final scrollController = useScrollController();
     final focusNode = useFocusNode();
     final scale = context.theme.scaling;
+    final windowsStage = useImmersiveUi(context);
 
     useEffect(() {
       if (!kIsMobile) return null;
@@ -44,51 +46,61 @@ class TrackPresentation extends HookConsumerWidget {
       };
     }, [focusNode, scrollController, scale]);
 
+    final content = CustomScrollView(
+      controller: scrollController,
+      slivers: [
+        const TrackPresentationTopSection(),
+        const SliverGap(16),
+        SliverList.list(
+          children: [
+            TrackPresentationModifiersSection(
+              focusNode: focusNode,
+            ),
+            LayoutBuilder(builder: (context, constrains) {
+              return Basic(
+                padding: EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: windowsStage && !kIsAndroid ? 32 : 16,
+                ),
+                leading: constrains.mdAndUp ? const Text("  #") : null,
+                title: Row(
+                  children: [
+                    Expanded(
+                      flex: constrains.lgAndUp ? 5 : 6,
+                      child: Text(context.l10n.title),
+                    ),
+                    if (constrains.mdAndUp)
+                      Expanded(
+                        flex: 3,
+                        child: Text(context.l10n.album),
+                      ),
+                    Text(context.l10n.duration),
+                  ],
+                ),
+              ).small().muted();
+            }),
+          ],
+        ),
+        const PresentationListSection(),
+        const SliverSafeArea(sliver: SliverGap(10)),
+      ],
+    );
+
     return Data<TrackPresentationOptions>.inherit(
       data: options,
       child: SafeArea(
         bottom: false,
         child: Scaffold(
-          headers: const [TitleBar()],
-          child: CustomScrollView(
-            controller: scrollController,
-            slivers: [
-              const TrackPresentationTopSection(),
-              const SliverGap(16),
-              SliverList.list(
-                children: [
-                  TrackPresentationModifiersSection(
-                    focusNode: focusNode,
-                  ),
-                  LayoutBuilder(builder: (context, constrains) {
-                    return Basic(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 16,
-                      ),
-                      leading: constrains.mdAndUp ? const Text("  #") : null,
-                      title: Row(
-                        children: [
-                          Expanded(
-                            flex: constrains.lgAndUp ? 5 : 6,
-                            child: Text(context.l10n.title),
-                          ),
-                          if (constrains.mdAndUp)
-                            Expanded(
-                              flex: 3,
-                              child: Text(context.l10n.album),
-                            ),
-                          Text(context.l10n.duration),
-                        ],
-                      ),
-                    ).small().muted();
-                  }),
-                ],
-              ),
-              const PresentationListSection(),
-              const SliverSafeArea(sliver: SliverGap(10)),
-            ],
-          ),
+          backgroundColor: windowsStage ? Colors.transparent : null,
+          headers: [
+            TitleBar(
+              backgroundColor: windowsStage ? Colors.transparent : null,
+              surfaceBlur: windowsStage ? 0 : null,
+            ),
+          ],
+          child: windowsStage
+              ? WindowsDetailBackdrop(image: options.image, child: content)
+              : content,
         ),
       ),
     );

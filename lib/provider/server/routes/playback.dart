@@ -20,6 +20,8 @@ import 'package:spotube/provider/user_preferences/user_preferences_provider.dart
 import 'package:spotube/services/audio_player/audio_player.dart';
 import 'package:spotube/services/logger/logger.dart';
 import 'package:spotube/services/sourced_track/sourced_track.dart';
+import 'package:spotube/services/webdav/webdav_account_store.dart';
+import 'package:spotube/services/webdav/webdav_stream_proxy.dart';
 import 'package:spotube/utils/service_utils.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -41,8 +43,11 @@ class ServerPlaybackRoutes {
   UserPreferences get userPreferences => ref.read(userPreferencesProvider);
   AudioPlayerState get playlist => ref.read(audioPlayerProvider);
   final Dio dio;
+  final WebDavStreamProxy webDavProxy;
 
-  ServerPlaybackRoutes(this.ref) : dio = Dio();
+  ServerPlaybackRoutes(this.ref)
+      : dio = Dio(),
+        webDavProxy = WebDavStreamProxy();
 
   Future<String> _getTrackCacheFilePath(SourcedTrack track) async {
     return join(
@@ -332,6 +337,58 @@ class ServerPlaybackRoutes {
     }
   }
 
+  Future<Response> headWebDavTrack(
+    Request request,
+    String accountId,
+    String encodedUri,
+  ) {
+    return _proxyWebDavTrack(request, accountId, encodedUri, method: 'HEAD');
+  }
+
+  Future<Response> getWebDavTrack(
+    Request request,
+    String accountId,
+    String encodedUri,
+  ) {
+    return _proxyWebDavTrack(request, accountId, encodedUri, method: 'GET');
+  }
+
+  Future<Response> _proxyWebDavTrack(
+    Request request,
+    String accountId,
+    String encodedUri, {
+    required String method,
+  }) async {
+    try {
+      final account = WebDavAccountStore.getById(accountId);
+      if (account == null) return Response.notFound('WebDAV account not found');
+
+      final remoteUri = WebDavStreamProxy.decodeRemoteUri(encodedUri);
+      final response = await webDavProxy.open(
+        account: account,
+        remoteUri: remoteUri,
+        method: method,
+        range: request.headers[HttpHeaders.rangeHeader],
+        ifRange: request.headers[HttpHeaders.ifRangeHeader],
+      );
+      return Response(
+        response.statusCode,
+        body: method == 'HEAD' ? null : response.body,
+        headers: response.headers,
+      );
+    } on FormatException catch (error) {
+      return Response.badRequest(body: error.message);
+    } catch (error, stackTrace) {
+      AppLogger.reportError(error, stackTrace);
+      return Response(502, body: 'Unable to stream the WebDAV file');
+    }
+  }
+
+  void close() {
+    dio.close();
+    webDavProxy.close();
+  }
+
   /// @get('/playback/toggle-playback')
   Future<Response> togglePlayback(Request request) async {
     audioPlayer.isPlaying
@@ -354,5 +411,8 @@ class ServerPlaybackRoutes {
   }
 }
 
-final serverPlaybackRoutesProvider =
-    Provider((ref) => ServerPlaybackRoutes(ref));
+final serverPlaybackRoutesProvider = Provider((ref) {
+  final routes = ServerPlaybackRoutes(ref);
+  ref.onDispose(routes.close);
+  return routes;
+});

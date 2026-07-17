@@ -24,6 +24,7 @@ import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/metadata_plugin/audio_source/quality_label.dart';
 import 'package:spotube/provider/server/active_track_sources.dart';
 import 'package:spotube/provider/volume_provider.dart';
+import 'package:spotube/utils/platform.dart';
 
 class PlayerView extends HookConsumerWidget {
   final PanelController panelController;
@@ -90,7 +91,9 @@ class PlayerView extends HookConsumerWidget {
       },
       child: SurfaceCard(
         borderWidth: 0,
-        surfaceOpacity: 0.9,
+        surfaceOpacity: kIsAndroid ? 0.68 : 0.9,
+        surfaceBlur: kIsAndroid ? 30 : null,
+        fillColor: kIsAndroid ? const Color(0xD2080C15) : null,
         padding: EdgeInsets.zero,
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -146,12 +149,18 @@ class PlayerView extends HookConsumerWidget {
                         const BoxConstraints(maxHeight: 300, maxWidth: 300),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
+                      border: kIsAndroid
+                          ? Border.all(color: const Color(0x42FFFFFF))
+                          : null,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withAlpha(100),
-                          spreadRadius: 2,
-                          blurRadius: 10,
-                          offset: Offset.zero,
+                          color: kIsAndroid
+                              ? theme.colorScheme.primary.withAlpha(72)
+                              : Colors.black.withAlpha(100),
+                          spreadRadius: kIsAndroid ? 1 : 2,
+                          blurRadius: kIsAndroid ? 34 : 10,
+                          offset:
+                              kIsAndroid ? const Offset(0, 16) : Offset.zero,
                         ),
                       ],
                     ),

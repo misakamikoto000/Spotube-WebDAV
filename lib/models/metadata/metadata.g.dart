@@ -465,6 +465,7 @@ _$SpotubeLocalTrackObjectImpl _$$SpotubeLocalTrackObjectImplFromJson(
           Map<String, dynamic>.from(json['album'] as Map)),
       durationMs: (json['durationMs'] as num).toInt(),
       path: json['path'] as String,
+      webDavAccountId: json['webDavAccountId'] as String?,
       $type: json['runtimeType'] as String?,
     );
 
@@ -478,6 +479,7 @@ Map<String, dynamic> _$$SpotubeLocalTrackObjectImplToJson(
       'album': instance.album.toJson(),
       'durationMs': instance.durationMs,
       'path': instance.path,
+      'webDavAccountId': instance.webDavAccountId,
       'runtimeType': instance.$type,
     };
 

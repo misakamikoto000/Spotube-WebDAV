@@ -153,6 +153,296 @@ abstract class AppLocalizations {
     Locale('zh', 'TW')
   ];
 
+  /// No description provided for @webdav.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV'**
+  String get webdav;
+
+  /// No description provided for @connect_webdav.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect WebDAV'**
+  String get connect_webdav;
+
+  /// No description provided for @edit_webdav.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit WebDAV'**
+  String get edit_webdav;
+
+  /// No description provided for @webdav_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get webdav_name;
+
+  /// No description provided for @webdav_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'My music server'**
+  String get webdav_name_hint;
+
+  /// No description provided for @webdav_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get webdav_url;
+
+  /// No description provided for @webdav_url_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://example.com/remote.php/dav/files/user/Music/'**
+  String get webdav_url_hint;
+
+  /// No description provided for @webdav_invalid_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid HTTP or HTTPS WebDAV URL'**
+  String get webdav_invalid_url;
+
+  /// No description provided for @webdav_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Music folder (optional)'**
+  String get webdav_folder;
+
+  /// No description provided for @webdav_folder_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'/Music/Lossless'**
+  String get webdav_folder_hint;
+
+  /// No description provided for @webdav_invalid_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid WebDAV folder path'**
+  String get webdav_invalid_folder;
+
+  /// No description provided for @webdav_username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get webdav_username;
+
+  /// No description provided for @webdav_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get webdav_password;
+
+  /// No description provided for @webdav_password_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV password or app password'**
+  String get webdav_password_hint;
+
+  /// No description provided for @test_connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get test_connection;
+
+  /// No description provided for @webdav_connection_successful.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful'**
+  String get webdav_connection_successful;
+
+  /// No description provided for @webdav_authentication_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Check your username and password.'**
+  String get webdav_authentication_failed;
+
+  /// No description provided for @webdav_account_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'This WebDAV account no longer exists'**
+  String get webdav_account_not_found;
+
+  /// No description provided for @webdav_empty_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported audio files or folders were found'**
+  String get webdav_empty_folder;
+
+  /// No description provided for @webdav_remove_confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove WebDAV account \"{name}\"?'**
+  String webdav_remove_confirmation(Object name);
+
+  /// No description provided for @webdav_add_folder_to_library.
+  ///
+  /// In en, this message translates to:
+  /// **'Add current folder'**
+  String get webdav_add_folder_to_library;
+
+  /// No description provided for @webdav_current_library_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Library folder'**
+  String get webdav_current_library_folder;
+
+  /// No description provided for @webdav_folder_added_to_library.
+  ///
+  /// In en, this message translates to:
+  /// **'Added \"{folder}\" to the local library'**
+  String webdav_folder_added_to_library(Object folder);
+
+  /// No description provided for @webdav_scan_music.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan music'**
+  String get webdav_scan_music;
+
+  /// No description provided for @webdav_scanning_music.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning music...'**
+  String get webdav_scanning_music;
+
+  /// No description provided for @webdav_scan_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan complete: {count} tracks found'**
+  String webdav_scan_complete(Object count);
+
+  /// No description provided for @webdav_scanned_tracks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tracks scanned'**
+  String webdav_scanned_tracks(Object count);
+
+  /// No description provided for @webdav_match_metadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Match song information'**
+  String get webdav_match_metadata;
+
+  /// No description provided for @webdav_matching_metadata.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching song information...'**
+  String get webdav_matching_metadata;
+
+  /// No description provided for @webdav_match_artist_images.
+  ///
+  /// In en, this message translates to:
+  /// **'Match artist portraits'**
+  String get webdav_match_artist_images;
+
+  /// No description provided for @webdav_matching_artist_images.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching artist portraits...'**
+  String get webdav_matching_artist_images;
+
+  /// No description provided for @webdav_artist_images_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist portraits: {matched} matched, {unmatched} not found, {failed} failed'**
+  String webdav_artist_images_complete(
+      Object failed, Object matched, Object unmatched);
+
+  /// No description provided for @webdav_match_metadata_scan_first.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this WebDAV library before matching song information'**
+  String get webdav_match_metadata_scan_first;
+
+  /// No description provided for @webdav_match_metadata_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching complete: {matched} updated, {lyrics} lyrics cached, {unmatched} not found, {failed} failed'**
+  String webdav_match_metadata_complete(
+      Object failed, Object lyrics, Object matched, Object unmatched);
+
+  /// No description provided for @webdav_metadata_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Song information {completed}/{total}'**
+  String webdav_metadata_progress(Object completed, Object total);
+
+  /// No description provided for @webdav_browse_files.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse WebDAV files'**
+  String get webdav_browse_files;
+
+  /// No description provided for @webdav_metadata_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Song information matching was interrupted'**
+  String get webdav_metadata_failed;
+
+  /// No description provided for @webdav_filter_unmatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmatched ({count})'**
+  String webdav_filter_unmatched(Object count);
+
+  /// No description provided for @webdav_view_unmatched_tracks.
+  ///
+  /// In en, this message translates to:
+  /// **'View unmatched tracks ({count})'**
+  String webdav_view_unmatched_tracks(Object count);
+
+  /// No description provided for @webdav_show_all_tracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all tracks'**
+  String get webdav_show_all_tracks;
+
+  /// No description provided for @webdav_rematch_unmatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry unmatched with iTunes / QQ Music'**
+  String get webdav_rematch_unmatched;
+
+  /// No description provided for @webdav_no_unmatched_tracks.
+  ///
+  /// In en, this message translates to:
+  /// **'All tracks already have matched information'**
+  String get webdav_no_unmatched_tracks;
+
+  /// No description provided for @webdav_rematch_track_information.
+  ///
+  /// In en, this message translates to:
+  /// **'Rematch song information'**
+  String get webdav_rematch_track_information;
+
+  /// No description provided for @webdav_rematch_track_cover.
+  ///
+  /// In en, this message translates to:
+  /// **'Rematch cover only'**
+  String get webdav_rematch_track_cover;
+
+  /// No description provided for @webdav_rematch_track_lyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Rematch lyrics only'**
+  String get webdav_rematch_track_lyrics;
+
+  /// No description provided for @webdav_track_rematch_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated \"{name}\"'**
+  String webdav_track_rematch_success(Object name);
+
+  /// No description provided for @webdav_track_rematch_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching information found for \"{name}\"'**
+  String webdav_track_rematch_not_found(Object name);
+
+  /// No description provided for @webdav_track_rematch_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not rematch \"{name}\"'**
+  String webdav_track_rematch_failed(Object name);
+
   /// No description provided for @guest.
   ///
   /// In en, this message translates to:

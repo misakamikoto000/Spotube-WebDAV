@@ -9,6 +9,177 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get webdav => 'WebDAV';
+
+  @override
+  String get connect_webdav => '连接 WebDAV';
+
+  @override
+  String get edit_webdav => '编辑 WebDAV';
+
+  @override
+  String get webdav_name => '名称';
+
+  @override
+  String get webdav_name_hint => '我的音乐服务器';
+
+  @override
+  String get webdav_url => '服务器地址';
+
+  @override
+  String get webdav_url_hint =>
+      'https://example.com/remote.php/dav/files/user/Music/';
+
+  @override
+  String get webdav_invalid_url => '请输入有效的 HTTP 或 HTTPS WebDAV 地址';
+
+  @override
+  String get webdav_folder => '指定文件夹（可选）';
+
+  @override
+  String get webdav_folder_hint => '/Music/无损';
+
+  @override
+  String get webdav_invalid_folder => '请输入有效的 WebDAV 文件夹路径';
+
+  @override
+  String get webdav_username => '用户名';
+
+  @override
+  String get webdav_password => '密码';
+
+  @override
+  String get webdav_password_hint => 'WebDAV 密码或应用专用密码';
+
+  @override
+  String get test_connection => '测试连接';
+
+  @override
+  String get webdav_connection_successful => '连接成功';
+
+  @override
+  String get webdav_authentication_failed => '认证失败，请检查用户名和密码';
+
+  @override
+  String get webdav_account_not_found => '此 WebDAV 账户已不存在';
+
+  @override
+  String get webdav_empty_folder => '未找到支持的音频文件或文件夹';
+
+  @override
+  String webdav_remove_confirmation(Object name) {
+    return '要移除 WebDAV 账户“$name”吗？';
+  }
+
+  @override
+  String get webdav_add_folder_to_library => '添加当前文件夹';
+
+  @override
+  String get webdav_current_library_folder => '已设为曲库文件夹';
+
+  @override
+  String webdav_folder_added_to_library(Object folder) {
+    return '已将“$folder”添加到本地图书馆';
+  }
+
+  @override
+  String get webdav_scan_music => '扫描音乐';
+
+  @override
+  String get webdav_scanning_music => '正在扫描音乐...';
+
+  @override
+  String webdav_scan_complete(Object count) {
+    return '扫描完成，共找到 $count 首音乐';
+  }
+
+  @override
+  String webdav_scanned_tracks(Object count) {
+    return '已扫描 $count 首音乐';
+  }
+
+  @override
+  String get webdav_match_metadata => '匹配歌曲信息';
+
+  @override
+  String get webdav_matching_metadata => '正在匹配歌曲信息...';
+
+  @override
+  String get webdav_match_artist_images => '匹配歌手头像';
+
+  @override
+  String get webdav_matching_artist_images => '正在匹配歌手头像...';
+
+  @override
+  String webdav_artist_images_complete(
+      Object failed, Object matched, Object unmatched) {
+    return '歌手头像：匹配 $matched 位，未找到 $unmatched 位，失败 $failed 位';
+  }
+
+  @override
+  String get webdav_match_metadata_scan_first => '请先扫描此 WebDAV 曲库，再匹配歌曲信息';
+
+  @override
+  String webdav_match_metadata_complete(
+      Object failed, Object lyrics, Object matched, Object unmatched) {
+    return '匹配完成：更新 $matched 首，缓存 $lyrics 首歌词，$unmatched 首未找到，$failed 首失败';
+  }
+
+  @override
+  String webdav_metadata_progress(Object completed, Object total) {
+    return '歌曲信息 $completed/$total';
+  }
+
+  @override
+  String get webdav_browse_files => '浏览 WebDAV 文件';
+
+  @override
+  String get webdav_metadata_failed => '歌曲信息匹配已中断';
+
+  @override
+  String webdav_filter_unmatched(Object count) {
+    return '未匹配（$count）';
+  }
+
+  @override
+  String webdav_view_unmatched_tracks(Object count) {
+    return '查看未匹配歌曲（$count）';
+  }
+
+  @override
+  String get webdav_show_all_tracks => '显示全部歌曲';
+
+  @override
+  String get webdav_rematch_unmatched => '使用 iTunes / QQ 音乐重新匹配';
+
+  @override
+  String get webdav_no_unmatched_tracks => '所有歌曲均已匹配信息';
+
+  @override
+  String get webdav_rematch_track_information => '重新匹配歌曲信息';
+
+  @override
+  String get webdav_rematch_track_cover => '仅重新匹配封面';
+
+  @override
+  String get webdav_rematch_track_lyrics => '仅重新匹配歌词';
+
+  @override
+  String webdav_track_rematch_success(Object name) {
+    return '已更新“$name”';
+  }
+
+  @override
+  String webdav_track_rematch_not_found(Object name) {
+    return '未找到“$name”的匹配信息';
+  }
+
+  @override
+  String webdav_track_rematch_failed(Object name) {
+    return '“$name”重新匹配失败';
+  }
+
+  @override
   String get guest => '访客';
 
   @override
@@ -1530,6 +1701,153 @@ class AppLocalizationsZh extends AppLocalizations {
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
 class AppLocalizationsZhTw extends AppLocalizationsZh {
   AppLocalizationsZhTw() : super('zh_TW');
+
+  @override
+  String get webdav => 'WebDAV';
+
+  @override
+  String get connect_webdav => '連線 WebDAV';
+
+  @override
+  String get edit_webdav => '編輯 WebDAV';
+
+  @override
+  String get webdav_name => '名稱';
+
+  @override
+  String get webdav_name_hint => '我的音樂伺服器';
+
+  @override
+  String get webdav_url => '伺服器網址';
+
+  @override
+  String get webdav_url_hint =>
+      'https://example.com/remote.php/dav/files/user/Music/';
+
+  @override
+  String get webdav_invalid_url => '請輸入有效的 HTTP 或 HTTPS WebDAV 網址';
+
+  @override
+  String get webdav_folder => '指定資料夾（選填）';
+
+  @override
+  String get webdav_folder_hint => '/Music/無損';
+
+  @override
+  String get webdav_invalid_folder => '請輸入有效的 WebDAV 資料夾路徑';
+
+  @override
+  String get webdav_username => '使用者名稱';
+
+  @override
+  String get webdav_password => '密碼';
+
+  @override
+  String get webdav_password_hint => 'WebDAV 密碼或應用程式專用密碼';
+
+  @override
+  String get test_connection => '測試連線';
+
+  @override
+  String get webdav_connection_successful => '連線成功';
+
+  @override
+  String get webdav_authentication_failed => '驗證失敗，請檢查使用者名稱和密碼';
+
+  @override
+  String get webdav_account_not_found => '此 WebDAV 帳戶已不存在';
+
+  @override
+  String get webdav_empty_folder => '找不到支援的音訊檔案或資料夾';
+
+  @override
+  String webdav_remove_confirmation(Object name) {
+    return '要移除 WebDAV 帳戶「$name」嗎？';
+  }
+
+  @override
+  String get webdav_add_folder_to_library => '加入目前資料夾';
+
+  @override
+  String get webdav_current_library_folder => '已設為音樂庫資料夾';
+
+  @override
+  String webdav_folder_added_to_library(Object folder) {
+    return '已將「$folder」加入本機音樂庫';
+  }
+
+  @override
+  String get webdav_scan_music => '掃描音樂';
+
+  @override
+  String get webdav_scanning_music => '正在掃描音樂...';
+
+  @override
+  String webdav_scan_complete(Object count) {
+    return '掃描完成，共找到 $count 首音樂';
+  }
+
+  @override
+  String webdav_scanned_tracks(Object count) {
+    return '已掃描 $count 首音樂';
+  }
+
+  @override
+  String get webdav_match_metadata => '比對歌曲資訊';
+
+  @override
+  String get webdav_matching_metadata => '正在比對歌曲資訊...';
+
+  @override
+  String get webdav_match_artist_images => '比對歌手頭像';
+
+  @override
+  String get webdav_matching_artist_images => '正在比對歌手頭像...';
+
+  @override
+  String webdav_artist_images_complete(
+      Object failed, Object matched, Object unmatched) {
+    return '歌手頭像：比對 $matched 位，未找到 $unmatched 位，失敗 $failed 位';
+  }
+
+  @override
+  String get webdav_match_metadata_scan_first => '請先掃描此 WebDAV 音樂庫，再比對歌曲資訊';
+
+  @override
+  String webdav_match_metadata_complete(
+      Object failed, Object lyrics, Object matched, Object unmatched) {
+    return '比對完成：更新 $matched 首，快取 $lyrics 首歌詞，$unmatched 首未找到，$failed 首失敗';
+  }
+
+  @override
+  String webdav_metadata_progress(Object completed, Object total) {
+    return '歌曲資訊 $completed/$total';
+  }
+
+  @override
+  String get webdav_browse_files => '瀏覽 WebDAV 檔案';
+
+  @override
+  String get webdav_metadata_failed => '歌曲資訊比對已中斷';
+
+  @override
+  String webdav_filter_unmatched(Object count) {
+    return '未比對（$count）';
+  }
+
+  @override
+  String webdav_view_unmatched_tracks(Object count) {
+    return '查看未比對歌曲（$count）';
+  }
+
+  @override
+  String get webdav_show_all_tracks => '顯示全部歌曲';
+
+  @override
+  String get webdav_rematch_unmatched => '使用替代來源重新比對';
+
+  @override
+  String get webdav_no_unmatched_tracks => '所有歌曲均已比對資訊';
 
   @override
   String get guest => '訪客';

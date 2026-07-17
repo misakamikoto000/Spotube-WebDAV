@@ -14,6 +14,14 @@ final serverRouterProvider = Provider((ref) {
 
   router.head("/stream/<trackId>", playbackRoutes.headStreamTrackId);
   router.get("/stream/<trackId>", playbackRoutes.getStreamTrackId);
+  router.head(
+    "/webdav/<accountId>/<encodedUri>",
+    playbackRoutes.headWebDavTrack,
+  );
+  router.get(
+    "/webdav/<accountId>/<encodedUri>",
+    playbackRoutes.getWebDavTrack,
+  );
 
   router.get("/playback/toggle-playback", playbackRoutes.togglePlayback);
   router.get("/playback/previous", playbackRoutes.previousTrack);

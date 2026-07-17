@@ -9,6 +9,183 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get webdav => 'WebDAV';
+
+  @override
+  String get connect_webdav => 'Connect WebDAV';
+
+  @override
+  String get edit_webdav => 'Edit WebDAV';
+
+  @override
+  String get webdav_name => 'Name';
+
+  @override
+  String get webdav_name_hint => 'My music server';
+
+  @override
+  String get webdav_url => 'Server URL';
+
+  @override
+  String get webdav_url_hint =>
+      'https://example.com/remote.php/dav/files/user/Music/';
+
+  @override
+  String get webdav_invalid_url => 'Enter a valid HTTP or HTTPS WebDAV URL';
+
+  @override
+  String get webdav_folder => 'Music folder (optional)';
+
+  @override
+  String get webdav_folder_hint => '/Music/Lossless';
+
+  @override
+  String get webdav_invalid_folder => 'Enter a valid WebDAV folder path';
+
+  @override
+  String get webdav_username => 'Username';
+
+  @override
+  String get webdav_password => 'Password';
+
+  @override
+  String get webdav_password_hint => 'WebDAV password or app password';
+
+  @override
+  String get test_connection => 'Test connection';
+
+  @override
+  String get webdav_connection_successful => 'Connection successful';
+
+  @override
+  String get webdav_authentication_failed =>
+      'Authentication failed. Check your username and password.';
+
+  @override
+  String get webdav_account_not_found => 'This WebDAV account no longer exists';
+
+  @override
+  String get webdav_empty_folder =>
+      'No supported audio files or folders were found';
+
+  @override
+  String webdav_remove_confirmation(Object name) {
+    return 'Remove WebDAV account \"$name\"?';
+  }
+
+  @override
+  String get webdav_add_folder_to_library => 'Add current folder';
+
+  @override
+  String get webdav_current_library_folder => 'Library folder';
+
+  @override
+  String webdav_folder_added_to_library(Object folder) {
+    return 'Added \"$folder\" to the local library';
+  }
+
+  @override
+  String get webdav_scan_music => 'Scan music';
+
+  @override
+  String get webdav_scanning_music => 'Scanning music...';
+
+  @override
+  String webdav_scan_complete(Object count) {
+    return 'Scan complete: $count tracks found';
+  }
+
+  @override
+  String webdav_scanned_tracks(Object count) {
+    return '$count tracks scanned';
+  }
+
+  @override
+  String get webdav_match_metadata => 'Match song information';
+
+  @override
+  String get webdav_matching_metadata => 'Matching song information...';
+
+  @override
+  String get webdav_match_artist_images => 'Match artist portraits';
+
+  @override
+  String get webdav_matching_artist_images => 'Matching artist portraits...';
+
+  @override
+  String webdav_artist_images_complete(
+      Object failed, Object matched, Object unmatched) {
+    return 'Artist portraits: $matched matched, $unmatched not found, $failed failed';
+  }
+
+  @override
+  String get webdav_match_metadata_scan_first =>
+      'Scan this WebDAV library before matching song information';
+
+  @override
+  String webdav_match_metadata_complete(
+      Object failed, Object lyrics, Object matched, Object unmatched) {
+    return 'Matching complete: $matched updated, $lyrics lyrics cached, $unmatched not found, $failed failed';
+  }
+
+  @override
+  String webdav_metadata_progress(Object completed, Object total) {
+    return 'Song information $completed/$total';
+  }
+
+  @override
+  String get webdav_browse_files => 'Browse WebDAV files';
+
+  @override
+  String get webdav_metadata_failed =>
+      'Song information matching was interrupted';
+
+  @override
+  String webdav_filter_unmatched(Object count) {
+    return 'Unmatched ($count)';
+  }
+
+  @override
+  String webdav_view_unmatched_tracks(Object count) {
+    return 'View unmatched tracks ($count)';
+  }
+
+  @override
+  String get webdav_show_all_tracks => 'Show all tracks';
+
+  @override
+  String get webdav_rematch_unmatched =>
+      'Retry unmatched with iTunes / QQ Music';
+
+  @override
+  String get webdav_no_unmatched_tracks =>
+      'All tracks already have matched information';
+
+  @override
+  String get webdav_rematch_track_information => 'Rematch song information';
+
+  @override
+  String get webdav_rematch_track_cover => 'Rematch cover only';
+
+  @override
+  String get webdav_rematch_track_lyrics => 'Rematch lyrics only';
+
+  @override
+  String webdav_track_rematch_success(Object name) {
+    return 'Updated \"$name\"';
+  }
+
+  @override
+  String webdav_track_rematch_not_found(Object name) {
+    return 'No matching information found for \"$name\"';
+  }
+
+  @override
+  String webdav_track_rematch_failed(Object name) {
+    return 'Could not rematch \"$name\"';
+  }
+
+  @override
   String get guest => 'Гость';
 
   @override

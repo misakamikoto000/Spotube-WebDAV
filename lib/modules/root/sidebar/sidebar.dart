@@ -8,8 +8,10 @@ import 'package:spotube/models/database/database.dart';
 import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/modules/root/sidebar/sidebar_footer.dart';
+import 'package:spotube/modules/root/windows/windows_desktop_sidebar.dart';
 
 import 'package:spotube/provider/user_preferences/user_preferences_provider.dart';
+import 'package:spotube/utils/platform.dart';
 
 class Sidebar extends HookConsumerWidget {
   final Widget child;
@@ -48,6 +50,10 @@ class Sidebar extends HookConsumerWidget {
     if (layoutMode == LayoutMode.compact ||
         (mediaQuery.smAndDown && layoutMode == LayoutMode.adaptive)) {
       return child;
+    }
+
+    if (kIsWindows && mediaQuery.lgAndUp) {
+      return WindowsDesktopSidebar(child: child);
     }
 
     final navigationButtons = [

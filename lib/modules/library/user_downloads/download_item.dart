@@ -9,6 +9,7 @@ import 'package:spotube/components/links/artist_link.dart';
 import 'package:spotube/components/ui/button_tile.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/download_manager_provider.dart';
+import 'package:spotube/utils/platform.dart';
 
 class DownloadItem extends HookConsumerWidget {
   final DownloadTask task;
@@ -20,8 +21,9 @@ class DownloadItem extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final downloadManager = ref.watch(downloadManagerProvider.notifier);
+    final windowsStage = useImmersiveUi(context);
 
-    return ButtonTile(
+    final tile = ButtonTile(
       style: ButtonVariance.ghost,
       leading: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5),
@@ -96,6 +98,23 @@ class DownloadItem extends HookConsumerWidget {
               downloadManager.cancel(task.track);
             }),
       },
+    );
+
+    if (!windowsStage) return tile;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0x0EFFFFFF),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0x1CFFFFFF)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: tile,
+        ),
+      ),
     );
   }
 }

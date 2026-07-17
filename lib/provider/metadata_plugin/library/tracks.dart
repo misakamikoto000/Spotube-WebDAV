@@ -22,7 +22,12 @@ class MetadataPluginSavedTracksNotifier
   build() async {
     ref.cacheFor();
 
-    await ref.watch(metadataPluginAuthenticatedProvider.future);
+    await metadataPlugin;
+    final authenticated =
+        await ref.watch(metadataPluginAuthenticatedProvider.future);
+    if (!authenticated) {
+      return emptyMetadataPagination<SpotubeFullTrackObject>();
+    }
     return await fetch(0, 20);
   }
 

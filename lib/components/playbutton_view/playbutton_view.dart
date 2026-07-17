@@ -9,6 +9,7 @@ import 'package:spotube/components/playbutton_view/playbutton_tile.dart';
 import 'package:spotube/components/waypoint.dart';
 import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/extensions/context.dart';
+import 'package:spotube/utils/platform.dart';
 import 'package:very_good_infinite_list/very_good_infinite_list.dart';
 
 const _dummyPlaybuttonCard = PlaybuttonCard(
@@ -60,6 +61,7 @@ class PlaybuttonView extends StatelessWidget {
 
     return SliverLayoutBuilder(
       builder: (context, constrains) => HookBuilder(builder: (context) {
+        final windowsStage = useImmersiveUi(context);
         final isGrid = useState(constrains.mdAndUp);
         final hasUserInteracted = useRef(false);
 
@@ -129,10 +131,10 @@ class PlaybuttonView extends StatelessWidget {
                   : SliverGrid.builder(
                       itemCount: isLoading ? 6 : itemCount + 1,
                       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 150 * scale,
-                        mainAxisExtent: 225 * scale,
-                        crossAxisSpacing: 12 * scale,
-                        mainAxisSpacing: 12 * scale,
+                        maxCrossAxisExtent: (windowsStage ? 190 : 150) * scale,
+                        mainAxisExtent: (windowsStage ? 258 : 225) * scale,
+                        crossAxisSpacing: (windowsStage ? 16 : 12) * scale,
+                        mainAxisSpacing: (windowsStage ? 16 : 12) * scale,
                       ),
                       itemBuilder: (context, index) {
                         if (isLoading) {

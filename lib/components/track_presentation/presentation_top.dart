@@ -12,6 +12,7 @@ import 'package:spotube/components/track_presentation/use_is_user_playlist.dart'
 import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/modules/playlist/playlist_create_dialog.dart';
+import 'package:spotube/utils/platform.dart';
 
 class TrackPresentationTopSection extends HookConsumerWidget {
   const TrackPresentationTopSection({super.key});
@@ -21,6 +22,8 @@ class TrackPresentationTopSection extends HookConsumerWidget {
     final mediaQuery = MediaQuery.sizeOf(context);
     final options = TrackPresentationOptions.of(context);
     final scale = context.theme.scaling;
+    final windowsStage = useImmersiveUi(context);
+    final desktopStage = useImmersiveDesktopUi(context);
     final isUserPlaylist = useIsUserPlaylist(ref, options.collectionId);
 
     final decorationImage = DecorationImage(
@@ -28,7 +31,11 @@ class TrackPresentationTopSection extends HookConsumerWidget {
       fit: BoxFit.cover,
     );
 
-    final imageDimension = mediaQuery.mdAndUp ? 200 : 120;
+    final imageDimension = desktopStage
+        ? 238
+        : mediaQuery.mdAndUp
+            ? 200
+            : 120;
 
     final (:isLoading, :isActive, :onPlay, :onShuffle, :onAddToQueue) =
         useActionCallbacks(ref);
@@ -149,24 +156,44 @@ class TrackPresentationTopSection extends HookConsumerWidget {
 
     return SliverMainAxisGroup(
       slivers: [
-        if (mediaQuery.mdAndUp) SliverGap(16 * scale),
+        if (mediaQuery.mdAndUp) SliverGap((desktopStage ? 22 : 16) * scale),
         SliverPadding(
           padding: EdgeInsets.symmetric(
-            horizontal: (mediaQuery.mdAndUp ? 16 : 8.0) * scale,
+            horizontal:
+                (desktopStage ? 24 : (mediaQuery.mdAndUp ? 16 : 8.0)) * scale,
           ),
           sliver: SliverList.list(
             children: [
               DecoratedBox(
                 decoration: BoxDecoration(
                   image: decorationImage,
-                  borderRadius: BorderRadius.circular(45),
+                  borderRadius: BorderRadius.circular(windowsStage ? 30 : 45),
+                  boxShadow: windowsStage
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x66000000),
+                            blurRadius: 38,
+                            offset: Offset(0, 18),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: OutlinedContainer(
-                  surfaceOpacity: context.theme.surfaceOpacity,
-                  surfaceBlur: context.theme.surfaceBlur,
-                  padding: EdgeInsets.all(24 * scale),
-                  borderRadius: BorderRadius.circular(22 * scale),
-                  borderWidth: 2,
+                  surfaceOpacity:
+                      windowsStage ? 0.82 : context.theme.surfaceOpacity,
+                  surfaceBlur: windowsStage ? 30 : context.theme.surfaceBlur,
+                  padding: EdgeInsets.all(
+                    (desktopStage
+                            ? 30
+                            : kIsAndroid
+                                ? 16
+                                : 24) *
+                        scale,
+                  ),
+                  borderRadius:
+                      BorderRadius.circular((windowsStage ? 28 : 22) * scale),
+                  borderColor: windowsStage ? const Color(0x42FFFFFF) : null,
+                  borderWidth: windowsStage ? 1 : 2,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     spacing: 16 * scale,
@@ -180,7 +207,20 @@ class TrackPresentationTopSection extends HookConsumerWidget {
                             height: imageDimension * scale,
                             width: imageDimension * scale,
                             decoration: BoxDecoration(
-                              borderRadius: context.theme.borderRadiusXl,
+                              borderRadius:
+                                  BorderRadius.circular(windowsStage ? 22 : 10),
+                              border: windowsStage
+                                  ? Border.all(color: const Color(0x40FFFFFF))
+                                  : null,
+                              boxShadow: windowsStage
+                                  ? const [
+                                      BoxShadow(
+                                        color: Color(0x8A000000),
+                                        blurRadius: 28,
+                                        offset: Offset(0, 16),
+                                      ),
+                                    ]
+                                  : null,
                               image: decorationImage,
                             ),
                           ),
@@ -194,6 +234,7 @@ class TrackPresentationTopSection extends HookConsumerWidget {
                                   maxLines: 2,
                                   minFontSize: 16,
                                   style: context.theme.typography.h3,
+                                  maxFontSize: desktopStage ? 36 : 30,
                                 ),
                                 if (options.description != null)
                                   AutoSizeText(

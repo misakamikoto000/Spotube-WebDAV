@@ -2,7 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:spotube/collections/formatters.dart';
-import 'package:spotube/components/titlebar/titlebar.dart';
+import 'package:spotube/modules/stats/common/stats_detail_scaffold.dart';
 import 'package:spotube/modules/stats/common/track_item.dart';
 import 'package:spotube/extensions/context.dart';
 
@@ -28,41 +28,34 @@ class StatsMinutesPage extends HookConsumerWidget {
 
     final tracksData = topTracks.asData?.value.items ?? [];
 
-    return SafeArea(
-      bottom: false,
-      child: Scaffold(
-        headers: [
-          TitleBar(
-            title: Text(context.l10n.minutes_listened),
-          )
-        ],
-        child: Skeletonizer(
-          enabled: topTracks.isLoading && !topTracks.isLoadingNextPage,
-          child: InfiniteList(
-            separatorBuilder: (context, index) => const Gap(8),
-            onFetchData: () async {
-              await topTracksNotifier.fetchMore();
-            },
-            hasError: topTracks.hasError,
-            isLoading: topTracks.isLoading && !topTracks.isLoadingNextPage,
-            hasReachedMax: topTracks.asData?.value.hasMore ?? true,
-            itemCount: tracksData.length,
-            itemBuilder: (context, index) {
-              final track = tracksData[index];
-              return StatsTrackItem(
-                track: track.track,
-                info: Text(
-                  context.l10n.count_mins(
-                    compactNumberFormatter.format(
-                      track.count *
-                          Duration(milliseconds: track.track.durationMs)
-                              .inMinutes,
-                    ),
+    return StatsDetailScaffold(
+      title: context.l10n.minutes_listened,
+      child: Skeletonizer(
+        enabled: topTracks.isLoading && !topTracks.isLoadingNextPage,
+        child: InfiniteList(
+          separatorBuilder: (context, index) => const Gap(8),
+          onFetchData: () async {
+            await topTracksNotifier.fetchMore();
+          },
+          hasError: topTracks.hasError,
+          isLoading: topTracks.isLoading && !topTracks.isLoadingNextPage,
+          hasReachedMax: topTracks.asData?.value.hasMore ?? true,
+          itemCount: tracksData.length,
+          itemBuilder: (context, index) {
+            final track = tracksData[index];
+            return StatsTrackItem(
+              track: track.track,
+              info: Text(
+                context.l10n.count_mins(
+                  compactNumberFormatter.format(
+                    track.count *
+                        Duration(milliseconds: track.track.durationMs)
+                            .inMinutes,
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

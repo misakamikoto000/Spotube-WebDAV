@@ -80,6 +80,10 @@ class AppRouter extends RootStackRouter {
               // parentNavigatorKey: shellRouteNavigatorKey,
             ),
             AutoRoute(
+              path: "local/webdav/:accountId",
+              page: WebDavBrowserRoute.page,
+            ),
+            AutoRoute(
               path: "lyrics",
               page: LyricsRoute.page,
             ),

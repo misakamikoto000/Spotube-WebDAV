@@ -4,7 +4,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:spotube/collections/formatters.dart';
-import 'package:spotube/components/titlebar/titlebar.dart';
+import 'package:spotube/modules/stats/common/stats_detail_scaffold.dart';
 import 'package:spotube/modules/stats/common/artist_item.dart';
 import 'package:spotube/extensions/context.dart';
 
@@ -52,88 +52,79 @@ class StatsStreamFeesPage extends HookConsumerWidget {
       HistoryDuration.allTime: context.l10n.all_time,
     };
 
-    return SafeArea(
-      bottom: false,
-      child: Scaffold(
-        headers: [
-          TitleBar(
-            title: Text(context.l10n.streaming_fees_hypothetical),
-          )
+    return StatsDetailScaffold(
+      title: context.l10n.streaming_fees_hypothetical,
+      child: CustomScrollView(
+        slivers: [
+          SliverCrossAxisConstrained(
+            maxCrossAxisExtent: 600,
+            alignment: -1,
+            child: SliverPadding(
+              padding: const EdgeInsets.all(16.0),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  context.l10n.hipotetical_calculation,
+                ).small().muted(),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    context.l10n.total_money(usdFormatter.format(total)),
+                  ).semiBold().large(),
+                  Select<HistoryDuration>(
+                    value: duration.value,
+                    onChanged: (value) {
+                      if (value == null) return;
+                      duration.value = value;
+                    },
+                    itemBuilder: (context, value) => Text(translations[value]!),
+                    constraints: const BoxConstraints(maxWidth: 150),
+                    popupWidthConstraint: PopoverConstraint.anchorMaxSize,
+                    popup: SelectPopup(
+                      items: SelectItemBuilder(
+                        childCount: translations.length,
+                        builder: (context, index) {
+                          final entry = translations.entries.elementAt(index);
+                          return SelectItemButton(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          );
+                        },
+                      ),
+                    ).call,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverSafeArea(
+            sliver: Skeletonizer.sliver(
+              enabled: topTracks.isLoading && !topTracks.isLoadingNextPage,
+              child: SliverInfiniteList(
+                onFetchData: () async {
+                  await topTracksNotifier.fetchMore();
+                },
+                hasError: topTracks.hasError,
+                isLoading: topTracks.isLoading && !topTracks.isLoadingNextPage,
+                hasReachedMax: topTracks.asData?.value.hasMore ?? true,
+                itemCount: artistsData.length,
+                itemBuilder: (context, index) {
+                  final artist = artistsData[index];
+                  return StatsArtistItem(
+                    artist: artist.artist,
+                    info: Text(usdFormatter.format(artist.count * 0.005)),
+                  );
+                },
+              ),
+            ),
+          ),
         ],
-        child: CustomScrollView(
-          slivers: [
-            SliverCrossAxisConstrained(
-              maxCrossAxisExtent: 600,
-              alignment: -1,
-              child: SliverPadding(
-                padding: const EdgeInsets.all(16.0),
-                sliver: SliverToBoxAdapter(
-                  child: Text(
-                    context.l10n.hipotetical_calculation,
-                  ).small().muted(),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      context.l10n.total_money(usdFormatter.format(total)),
-                    ).semiBold().large(),
-                    Select<HistoryDuration>(
-                      value: duration.value,
-                      onChanged: (value) {
-                        if (value == null) return;
-                        duration.value = value;
-                      },
-                      itemBuilder: (context, value) =>
-                          Text(translations[value]!),
-                      constraints: const BoxConstraints(maxWidth: 150),
-                      popupWidthConstraint: PopoverConstraint.anchorMaxSize,
-                      popup: SelectPopup(
-                        items: SelectItemBuilder(
-                          childCount: translations.length,
-                          builder: (context, index) {
-                            final entry = translations.entries.elementAt(index);
-                            return SelectItemButton(
-                              value: entry.key,
-                              child: Text(entry.value),
-                            );
-                          },
-                        ),
-                      ).call,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverSafeArea(
-              sliver: Skeletonizer.sliver(
-                enabled: topTracks.isLoading && !topTracks.isLoadingNextPage,
-                child: SliverInfiniteList(
-                  onFetchData: () async {
-                    await topTracksNotifier.fetchMore();
-                  },
-                  hasError: topTracks.hasError,
-                  isLoading:
-                      topTracks.isLoading && !topTracks.isLoadingNextPage,
-                  hasReachedMax: topTracks.asData?.value.hasMore ?? true,
-                  itemCount: artistsData.length,
-                  itemBuilder: (context, index) {
-                    final artist = artistsData[index];
-                    return StatsArtistItem(
-                      artist: artist.artist,
-                      info: Text(usdFormatter.format(artist.count * 0.005)),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

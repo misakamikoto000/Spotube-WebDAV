@@ -21,6 +21,7 @@ import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/modules/player/player_queue_actions.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/audio_player/state.dart';
+import 'package:spotube/utils/platform.dart';
 
 class PlayerQueue extends HookConsumerWidget {
   final bool floating;
@@ -54,6 +55,7 @@ class PlayerQueue extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final mediaQuery = MediaQuery.sizeOf(context);
+    final windowsStage = useImmersiveUi(context);
 
     final controller = useAutoScrollController();
     final searchText = useState('');
@@ -228,6 +230,9 @@ class PlayerQueue extends HookConsumerWidget {
                       backgroundColor: Colors.transparent,
                       surfaceBlur: 0,
                       surfaceOpacity: 0,
+                      leading: [
+                        if (windowsStage && !floating) const BackButton(),
+                      ],
                       title: mediaQuery.mdAndUp || !isSearching.value
                           ? SizedBox(
                               height: 30,

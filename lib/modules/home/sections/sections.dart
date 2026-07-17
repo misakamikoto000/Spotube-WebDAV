@@ -82,7 +82,13 @@ class HomePageBrowseSection extends HookConsumerWidget {
 
         return HorizontalPlaybuttonCardView(
           items: section.items,
-          title: Text(section.title),
+          title: Text(
+            switch (section.id) {
+              'local:albums' => context.l10n.albums,
+              'local:artists' => context.l10n.artists,
+              _ => section.title,
+            },
+          ),
           hasNextPage: false,
           isLoadingNextPage: false,
           onFetchMore: () {},

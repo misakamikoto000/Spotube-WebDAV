@@ -5,7 +5,9 @@ import 'package:drift/drift.dart';
 import 'package:drift/extensions/json1.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:spotube/models/database/database.dart';
+import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/database/database.dart';
+import 'package:spotube/provider/history/history_utils.dart';
 
 class PlaybackHistorySummary {
   final Duration duration;
@@ -49,19 +51,19 @@ class PlaybackHistorySummaryNotifier
   build() async {
     final database = ref.watch(databaseProvider);
 
-    final uniqItemIdCountingCol =
-        database.historyTable.itemId.count(distinct: true);
     final itemIdCountingCol = database.historyTable.itemId.count();
     final durationSumJsonColumn =
         database.historyTable.data.jsonExtract<int>(r"$.durationMs").sum();
     final artistCountingCol =
         database.historyTable.data.jsonExtract<String>(r"$.artists");
+    final albumJsonColumn =
+        database.historyTable.data.jsonExtract<String>(r"$.album");
 
     final totalTracksListenedQuery = (database.selectOnly(database.historyTable)
-          ..addColumns([uniqItemIdCountingCol])
+          ..addColumns([itemIdCountingCol])
           ..where(
               database.historyTable.type.equals(HistoryEntryType.track.name)))
-        .map((row) => row.read(uniqItemIdCountingCol));
+        .map((row) => row.read(itemIdCountingCol));
 
     final totalDurationListenedQuery = (database
             .selectOnly(database.historyTable)
@@ -80,16 +82,36 @@ class PlaybackHistorySummaryNotifier
               ))
             .map(
       (row) {
-        final data = jsonDecode(row.read(artistCountingCol)!) as List;
-        return data.map((e) => e['id'] as String).cast<String>().toList();
+        final encoded = row.read(artistCountingCol);
+        if (encoded == null) return const <String>[];
+        final data = jsonDecode(encoded) as List;
+        return data
+            .map((entry) {
+              final artist = SpotubeSimpleArtistObject.fromJson(
+                Map<String, dynamic>.from(entry as Map),
+              );
+              return playbackHistoryArtistKey(artist);
+            })
+            .where((key) => key.isNotEmpty)
+            .toList(growable: false);
       },
     );
 
     final totalAlbumsListenedQuery = (database.selectOnly(database.historyTable)
-          ..addColumns([uniqItemIdCountingCol])
+          ..addColumns([albumJsonColumn])
           ..where(
-              database.historyTable.type.equals(HistoryEntryType.album.name)))
-        .map((row) => row.read(uniqItemIdCountingCol));
+              database.historyTable.type.equals(HistoryEntryType.track.name)))
+        .map((row) {
+      final encoded = row.read(albumJsonColumn);
+      if (encoded == null) return null;
+      final album = SpotubeSimpleAlbumObject.fromJson(
+        Map<String, dynamic>.from(jsonDecode(encoded) as Map),
+      );
+      return playbackHistoryAlbumKey(album);
+    });
+
+    final uniqItemIdCountingCol =
+        database.historyTable.itemId.count(distinct: true);
 
     final totalPlaylistsListenedQuery =
         (database.selectOnly(database.historyTable)
@@ -100,8 +122,7 @@ class PlaybackHistorySummaryNotifier
               ))
             .map((row) => row.read(uniqItemIdCountingCol));
 
-    final oldestDate = DateTime.now().copyWith(day: 1, hour: 0, minute: 0);
-    final newestDate = DateTime.now().copyWith(day: 30, hour: 23, minute: 59);
+    final monthRange = playbackHistoryMonthRange(DateTime.now());
     final totalTracksListenedThisMonthQuery =
         (database.selectOnly(database.historyTable)
               ..addColumns([itemIdCountingCol])
@@ -110,7 +131,9 @@ class PlaybackHistorySummaryNotifier
                       HistoryEntryType.track.name,
                     ) &
                     database.historyTable.createdAt
-                        .isBetweenValues(oldestDate, newestDate),
+                        .isBiggerOrEqualValue(monthRange.start) &
+                    database.historyTable.createdAt
+                        .isSmallerThanValue(monthRange.end),
               ))
             .map((row) => row.read(itemIdCountingCol));
 
@@ -133,10 +156,10 @@ class PlaybackHistorySummaryNotifier
           artists: event.expand((e) => e).toSet().length,
         ));
       }),
-      totalAlbumsListenedQuery.watchSingle().listen((event) {
-        if (event == null || state.asData == null) return;
+      totalAlbumsListenedQuery.watch().listen((event) {
+        if (state.asData == null) return;
         state = AsyncData(state.asData!.value.copyWith(
-          albums: event,
+          albums: event.nonNulls.toSet().length,
         ));
       }),
       totalPlaylistsListenedQuery.watchSingle().listen((event) {
@@ -170,8 +193,9 @@ class PlaybackHistorySummaryNotifier
           .get()
           .then((value) => value.expand((e) => e).toSet().length);
 
-      final totalAlbumsListened =
-          await totalAlbumsListenedQuery.getSingle() ?? 0;
+      final totalAlbumsListened = await totalAlbumsListenedQuery
+          .get()
+          .then((items) => items.nonNulls.toSet().length);
 
       final totalPlaylistsListened =
           await totalPlaylistsListenedQuery.getSingle() ?? 0;

@@ -10,6 +10,7 @@ import 'package:spotube/components/titlebar/titlebar.dart';
 import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/provider/download_manager_provider.dart';
+import 'package:spotube/utils/platform.dart';
 
 @RoutePage()
 class LibraryPage extends HookConsumerWidget {
@@ -49,11 +50,15 @@ class LibraryPage extends HookConsumerWidget {
       child: SafeArea(
         bottom: false,
         child: LayoutBuilder(builder: (context, constraints) {
+          final windowsStage = useImmersiveUi(context);
           return Scaffold(
+            backgroundColor: windowsStage ? Colors.transparent : null,
             headers: [
               if (constraints.smAndDown)
                 TitleBar(
                   automaticallyImplyLeading: false,
+                  backgroundColor: windowsStage ? Colors.transparent : null,
+                  surfaceBlur: windowsStage ? 0 : null,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: TabList(

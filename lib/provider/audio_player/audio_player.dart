@@ -12,8 +12,11 @@ import 'package:spotube/provider/blacklist_provider.dart';
 import 'package:spotube/provider/database/database.dart';
 import 'package:spotube/provider/discord_provider.dart';
 import 'package:spotube/provider/server/sourced_track_provider.dart';
+import 'package:spotube/provider/webdav/webdav_library_provider.dart';
 import 'package:spotube/services/audio_player/audio_player.dart';
 import 'package:spotube/services/logger/logger.dart';
+import 'package:spotube/services/webdav/webdav_library_store.dart';
+import 'package:spotube/services/webdav/webdav_queue_metadata.dart';
 
 class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   BlackListNotifier get _blacklist => ref.read(blacklistProvider.notifier);
@@ -61,8 +64,14 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       await audioPlayer.setShuffle(playerState.shuffled);
     }
 
-    final tracks = playerState.tracks;
+    final tracks = _withLatestLocalMetadata(playerState.tracks);
     final currentIndex = playerState.currentIndex;
+
+    if (!const DeepCollectionEquality().equals(tracks, playerState.tracks)) {
+      await _updatePlayerState(
+        AudioPlayerStateTableCompanion(tracks: Value(tracks)),
+      );
+    }
 
     if (tracks.isEmpty && state.tracks.isNotEmpty) {
       await _updatePlayerState(
@@ -144,8 +153,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       }),
       audioPlayer.playlistStream.listen((playlist) async {
         try {
-          final tracks =
-              playlist.medias.map((e) => SpotubeMedia.media(e).track).toList();
+          final tracks = _withLatestLocalMetadata(
+            playlist.medias.map((e) => SpotubeMedia.media(e).track).toList(),
+          );
 
           state = state.copyWith(
             tracks: tracks,
@@ -163,6 +173,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         }
       }),
     ];
+
+    ref.listen(webDavLibraryProvider, (previous, next) {
+      refreshLocalTrackMetadata(next.values.expand((tracks) => tracks));
+    });
 
     _syncSavedState();
 
@@ -253,6 +267,31 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         tracks: Value(state.tracks),
         currentIndex: Value(max(state.currentIndex, 0)),
       ),
+    );
+  }
+
+  /// Replaces stale WebDAV queue objects without interrupting playback.
+  /// MediaKit may still emit its original playlist extras later, so the
+  /// playlist listener also resolves every local item against the same store.
+  Future<void> refreshLocalTrackMetadata(
+    Iterable<SpotubeLocalTrackObject> latestTracks,
+  ) async {
+    if (state.tracks.isEmpty) return;
+    final updated = mergeWebDavQueueMetadata(state.tracks, latestTracks);
+    if (const DeepCollectionEquality().equals(updated, state.tracks)) return;
+
+    state = state.copyWith(tracks: updated);
+    await _updatePlayerState(
+      AudioPlayerStateTableCompanion(tracks: Value(updated)),
+    );
+  }
+
+  List<SpotubeTrackObject> _withLatestLocalMetadata(
+    Iterable<SpotubeTrackObject> tracks,
+  ) {
+    return mergeWebDavQueueMetadata(
+      tracks,
+      WebDavLibraryStore.tracksByAccount.values.expand((tracks) => tracks),
     );
   }
 

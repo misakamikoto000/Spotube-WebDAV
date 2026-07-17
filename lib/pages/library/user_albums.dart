@@ -12,14 +12,14 @@ import 'package:spotube/collections/spotube_icons.dart';
 import 'package:spotube/components/fallbacks/error_box.dart';
 import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/components/playbutton_view/playbutton_view.dart';
+import 'package:spotube/components/windows/windows_collection_toolbar.dart';
 import 'package:spotube/modules/album/album_card.dart';
 import 'package:spotube/components/inter_scrollbar/inter_scrollbar.dart';
-import 'package:spotube/components/fallbacks/anonymous_fallback.dart';
 import 'package:spotube/extensions/context.dart';
-import 'package:spotube/provider/metadata_plugin/core/auth.dart';
 import 'package:spotube/provider/metadata_plugin/library/albums.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:spotube/services/metadata/errors/exceptions.dart';
+import 'package:spotube/utils/platform.dart';
 
 @RoutePage()
 class UserAlbumsPage extends HookConsumerWidget {
@@ -28,7 +28,6 @@ class UserAlbumsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    final authenticated = ref.watch(metadataPluginAuthenticatedProvider);
     final albumsQuery = ref.watch(metadataPluginSavedAlbumsProvider);
     final albumsQueryNotifier =
         ref.watch(metadataPluginSavedAlbumsProvider.notifier);
@@ -36,6 +35,8 @@ class UserAlbumsPage extends HookConsumerWidget {
     final controller = useScrollController();
 
     final searchText = useState('');
+    final windowsStage = useImmersiveUi(context);
+    final isChinese = Localizations.localeOf(context).languageCode == 'zh';
 
     final albums = useMemoized(() {
       if (searchText.value.isEmpty) {
@@ -61,10 +62,6 @@ class UserAlbumsPage extends HookConsumerWidget {
       return const Center(child: NoDefaultMetadataPlugin());
     }
 
-    if (authenticated.asData?.value != true) {
-      return const AnonymousFallback();
-    }
-
     if (albumsQuery.hasError) {
       return ErrorBox(
         error: albumsQuery.error!,
@@ -77,6 +74,7 @@ class UserAlbumsPage extends HookConsumerWidget {
     return SafeArea(
       bottom: false,
       child: Scaffold(
+        backgroundColor: windowsStage ? Colors.transparent : null,
         child: material.RefreshIndicator.adaptive(
           onRefresh: () async {
             ref.invalidate(metadataPluginSavedAlbumsProvider);
@@ -86,30 +84,54 @@ class UserAlbumsPage extends HookConsumerWidget {
             child: CustomScrollView(
               controller: controller,
               slivers: [
-                SliverAppBar(
-                  automaticallyImplyLeading: false,
-                  backgroundColor: Theme.of(context).colorScheme.background,
-                  floating: true,
-                  flexibleSpace: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: SizedBox(
-                      height: 48,
-                      child: TextField(
-                        onChanged: (value) => searchText.value = value,
-                        features: const [
-                          InputFeature.leading(Icon(SpotubeIcons.filter))
-                        ],
-                        placeholder: Text(context.l10n.filter_albums),
+                if (windowsStage)
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      kIsAndroid ? 8 : 24,
+                      4,
+                      kIsAndroid ? 8 : 24,
+                      8,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: WindowsCollectionToolbar(
+                        icon: SpotubeIcons.album,
+                        title: context.l10n.albums,
+                        subtitle: isChinese
+                            ? '按专辑浏览已匹配的本地与 WebDAV 音乐'
+                            : 'Browse matched local and WebDAV music by album',
+                        countLabel: '${albums.length}',
+                        searchPlaceholder: context.l10n.filter_albums,
+                        onSearchChanged: (value) => searchText.value = value,
+                      ),
+                    ),
+                  )
+                else
+                  SliverAppBar(
+                    automaticallyImplyLeading: false,
+                    backgroundColor: Theme.of(context).colorScheme.background,
+                    floating: true,
+                    flexibleSpace: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: SizedBox(
+                        height: 48,
+                        child: TextField(
+                          onChanged: (value) => searchText.value = value,
+                          features: const [
+                            InputFeature.leading(Icon(SpotubeIcons.filter))
+                          ],
+                          placeholder: Text(context.l10n.filter_albums),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SliverGap(10),
+                SliverGap(windowsStage ? 8 : 10),
                 if (albums.isEmpty &&
                     !albumsQuery.isLoading &&
                     searchText.value.isEmpty)
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: windowsStage ? 24 : 8,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,

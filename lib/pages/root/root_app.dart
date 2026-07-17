@@ -8,9 +8,11 @@ import 'package:spotube/hooks/configurators/use_check_yt_dlp_installed.dart';
 import 'package:spotube/modules/root/bottom_player.dart';
 import 'package:spotube/modules/root/sidebar/sidebar.dart';
 import 'package:spotube/modules/root/spotube_navigation_bar.dart';
+import 'package:spotube/modules/root/windows/windows_stage.dart';
 import 'package:spotube/hooks/configurators/use_endless_playback.dart';
 import 'package:spotube/modules/root/use_global_subscriptions.dart';
 import 'package:spotube/provider/glance/glance.dart';
+import 'package:spotube/utils/platform.dart';
 
 @RoutePage()
 class RootAppPage extends HookConsumerWidget {
@@ -20,6 +22,10 @@ class RootAppPage extends HookConsumerWidget {
   Widget build(BuildContext context, ref) {
     final backgroundColor = Theme.of(context).colorScheme.background;
     final brightness = Theme.of(context).brightness;
+    final windowsStage = useImmersiveDesktopUi(context);
+    final immersiveStage = useImmersiveUi(context);
+    final systemBackgroundColor =
+        immersiveStage ? const Color(0xFF05070D) : backgroundColor;
 
     ref.listen(glanceProvider, (_, __) {});
 
@@ -30,14 +36,22 @@ class RootAppPage extends HookConsumerWidget {
     useEffect(() {
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
-          statusBarColor: backgroundColor, // status bar color
-          statusBarIconBrightness: brightness == Brightness.dark
-              ? Brightness.light
-              : Brightness.dark,
+          statusBarColor: systemBackgroundColor,
+          statusBarIconBrightness:
+              immersiveStage || brightness == Brightness.dark
+                  ? Brightness.light
+                  : Brightness.dark,
+          systemNavigationBarColor: systemBackgroundColor,
+          systemNavigationBarIconBrightness:
+              immersiveStage || brightness == Brightness.dark
+                  ? Brightness.light
+                  : Brightness.dark,
+          systemStatusBarContrastEnforced: false,
+          systemNavigationBarContrastEnforced: false,
         ),
       );
       return null;
-    }, [backgroundColor, brightness]);
+    }, [systemBackgroundColor, brightness, immersiveStage]);
 
     final scaffold = MediaQuery.removeViewInsets(
       context: context,
@@ -45,6 +59,7 @@ class RootAppPage extends HookConsumerWidget {
       child: SafeArea(
         top: false,
         child: Scaffold(
+          backgroundColor: immersiveStage ? Colors.transparent : null,
           footers: const [
             BottomPlayer(),
             SpotubeNavigationBar(),
@@ -53,8 +68,14 @@ class RootAppPage extends HookConsumerWidget {
           child: Sidebar(
             child: MediaQuery(
               data: MediaQuery.of(context).copyWith(
-                padding: MediaQuery.paddingOf(context)
-                    .copyWith(bottom: 100 * context.theme.scaling),
+                padding: MediaQuery.paddingOf(context).copyWith(
+                  bottom: (windowsStage
+                          ? 126
+                          : kIsAndroid
+                              ? 108
+                              : 100) *
+                      context.theme.scaling,
+                ),
               ),
               child: const AutoRouter(),
             ),
@@ -63,6 +84,6 @@ class RootAppPage extends HookConsumerWidget {
       ),
     );
 
-    return scaffold;
+    return immersiveStage ? WindowsStage(child: scaffold) : scaffold;
   }
 }

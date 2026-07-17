@@ -13,6 +13,7 @@ import 'package:spotube/modules/playlist/playlist_card.dart';
 import 'package:spotube/components/titlebar/titlebar.dart';
 import 'package:spotube/provider/metadata_plugin/browse/section_items.dart';
 import 'package:spotube/provider/metadata_plugin/utils/common.dart';
+import 'package:spotube/utils/platform.dart';
 
 const _dummyPlaybuttonCard = PlaybuttonCard(
   imageUrl: 'https://placehold.co/150x150.png',
@@ -38,6 +39,7 @@ class HomeBrowseSectionItemsPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final scale = context.theme.scaling;
+    final windowsStage = useImmersiveUi(context);
 
     final sectionItems =
         ref.watch(metadataPluginBrowseSectionItemsProvider(sectionId));
@@ -55,23 +57,26 @@ class HomeBrowseSectionItemsPage extends HookConsumerWidget {
       child: Skeletonizer(
         enabled: sectionItems.isLoading,
         child: Scaffold(
+          backgroundColor: windowsStage ? Colors.transparent : null,
           headers: [
             TitleBar(
               title: Text(section.title),
             )
           ],
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: windowsStage ? 24 : 8,
+            ),
             child: CustomScrollView(
               controller: controller,
               slivers: [
                 SliverGrid.builder(
                   itemCount: isLoading ? 6 : itemCount + 1,
                   gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 150 * scale,
-                    mainAxisExtent: 225 * scale,
-                    crossAxisSpacing: 12 * scale,
-                    mainAxisSpacing: 12 * scale,
+                    maxCrossAxisExtent: (windowsStage ? 190 : 150) * scale,
+                    mainAxisExtent: (windowsStage ? 258 : 225) * scale,
+                    crossAxisSpacing: (windowsStage ? 16 : 12) * scale,
+                    mainAxisSpacing: (windowsStage ? 16 : 12) * scale,
                   ),
                   itemBuilder: (context, index) {
                     if (isLoading) {

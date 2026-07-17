@@ -11,10 +11,10 @@ import 'package:spotube/collections/spotube_icons.dart';
 import 'package:spotube/components/fallbacks/error_box.dart';
 import 'package:spotube/components/fallbacks/no_default_metadata_plugin.dart';
 import 'package:spotube/components/playbutton_view/playbutton_view.dart';
+import 'package:spotube/components/windows/windows_collection_toolbar.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/modules/playlist/playlist_create_dialog.dart';
 import 'package:spotube/components/inter_scrollbar/inter_scrollbar.dart';
-import 'package:spotube/components/fallbacks/anonymous_fallback.dart';
 import 'package:spotube/modules/playlist/playlist_card.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/provider/metadata_plugin/core/auth.dart';
@@ -22,6 +22,7 @@ import 'package:spotube/provider/metadata_plugin/library/playlists.dart';
 import 'package:spotube/provider/metadata_plugin/core/user.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:spotube/services/metadata/errors/exceptions.dart';
+import 'package:spotube/utils/platform.dart';
 
 @RoutePage()
 class UserPlaylistsPage extends HookConsumerWidget {
@@ -31,6 +32,8 @@ class UserPlaylistsPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final searchText = useState('');
+    final windowsStage = useImmersiveUi(context);
+    final isChinese = Localizations.localeOf(context).languageCode == 'zh';
 
     final authenticated = ref.watch(metadataPluginAuthenticatedProvider);
 
@@ -89,10 +92,6 @@ class UserPlaylistsPage extends HookConsumerWidget {
       return const Center(child: NoDefaultMetadataPlugin());
     }
 
-    if (authenticated.asData?.value != true) {
-      return const AnonymousFallback();
-    }
-
     if (playlistsQuery.hasError) {
       return ErrorBox(
         error: playlistsQuery.error!,
@@ -113,42 +112,68 @@ class UserPlaylistsPage extends HookConsumerWidget {
           child: CustomScrollView(
             controller: controller,
             slivers: [
-              SliverAppBar(
-                automaticallyImplyLeading: false,
-                floating: true,
-                backgroundColor: context.theme.colorScheme.background,
-                flexibleSpace: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  height: 48,
-                  child: TextField(
-                    onChanged: (value) => searchText.value = value,
-                    placeholder: Text(context.l10n.filter_playlists),
-                    features: const [
-                      InputFeature.leading(Icon(SpotubeIcons.filter)),
-                    ],
+              if (windowsStage)
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    kIsAndroid ? 8 : 24,
+                    4,
+                    kIsAndroid ? 8 : 24,
+                    8,
                   ),
-                ),
-              ),
-              const SliverGap(10),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                sliver: PlaybuttonView(
-                  leading: const Expanded(
-                    child: Row(
-                      children: [
-                        PlaylistCreateDialogButton(),
-                        // const Gap(10),
-                        // Button.primary(
-                        //   leading: const Icon(SpotubeIcons.magic),
-                        //   child: Text(context.l10n.generate),
-                        //   onPressed: () {
-                        //     context.navigateTo(const PlaylistGeneratorRoute());
-                        //   },
-                        // ),
-                        // const Gap(10),
+                  sliver: SliverToBoxAdapter(
+                    child: WindowsCollectionToolbar(
+                      icon: SpotubeIcons.playlist,
+                      title: context.l10n.playlists,
+                      subtitle: isChinese
+                          ? '使用本地匹配信息整理你的私人歌单'
+                          : 'Organize playlists using locally matched metadata',
+                      countLabel: '${playlists.length}',
+                      searchPlaceholder: context.l10n.filter_playlists,
+                      onSearchChanged: (value) => searchText.value = value,
+                    ),
+                  ),
+                )
+              else
+                SliverAppBar(
+                  automaticallyImplyLeading: false,
+                  floating: true,
+                  backgroundColor: context.theme.colorScheme.background,
+                  flexibleSpace: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    height: 48,
+                    child: TextField(
+                      onChanged: (value) => searchText.value = value,
+                      placeholder: Text(context.l10n.filter_playlists),
+                      features: const [
+                        InputFeature.leading(Icon(SpotubeIcons.filter)),
                       ],
                     ),
                   ),
+                ),
+              SliverGap(windowsStage ? 8 : 10),
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: windowsStage && !kIsAndroid ? 24 : 8,
+                ),
+                sliver: PlaybuttonView(
+                  leading: authenticated.asData?.value == true
+                      ? const Expanded(
+                          child: Row(
+                            children: [
+                              PlaylistCreateDialogButton(),
+                              // const Gap(10),
+                              // Button.primary(
+                              //   leading: const Icon(SpotubeIcons.magic),
+                              //   child: Text(context.l10n.generate),
+                              //   onPressed: () {
+                              //     context.navigateTo(const PlaylistGeneratorRoute());
+                              //   },
+                              // ),
+                              // const Gap(10),
+                            ],
+                          ),
+                        )
+                      : null,
                   controller: controller,
                   hasMore: playlistsQuery.asData?.value.hasMore == true,
                   isLoading: playlistsQuery.isLoading,

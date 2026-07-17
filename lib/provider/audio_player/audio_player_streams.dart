@@ -7,6 +7,7 @@ import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/audio_player/state.dart';
 import 'package:spotube/provider/discord_provider.dart';
 import 'package:spotube/provider/history/history.dart';
+import 'package:spotube/provider/history/history_utils.dart';
 import 'package:spotube/provider/metadata_plugin/core/scrobble.dart';
 import 'package:spotube/provider/metadata_plugin/metadata_plugin_provider.dart';
 import 'package:spotube/provider/server/sourced_track_provider.dart';
@@ -83,50 +84,65 @@ class AudioPlayerStreamListeners {
   }
 
   StreamSubscription subscribeToScrobbleChanged() {
-    String? lastScrobbled;
+    final historyTracker = PlaybackHistoryScrobbleTracker();
     return audioPlayer.positionStream.listen((position) async {
+      String? uid;
       try {
-        final uid = audioPlayerState.activeTrack is SpotubeLocalTrackObject
-            ? (audioPlayerState.activeTrack as SpotubeLocalTrackObject).path
-            : audioPlayerState.activeTrack?.id;
-
-        /// According to Listenbrainz and Last.fm, a scrobble should be sent
-        /// after 4 minutes of listening or 50% of the track duration,
-        /// whichever is less.
-        final minimumListenTime = min(audioPlayer.duration.inSeconds ~/ 2, 240);
-
-        if (audioPlayerState.activeTrack == null ||
-            lastScrobbled == uid ||
-            position.inSeconds < minimumListenTime ||
-            audioPlayer.duration == Duration.zero ||
-            position == Duration.zero) {
+        final currentTrack = audioPlayerState.activeTrack;
+        if (currentTrack == null) return;
+        uid = playbackHistoryTrackKey(currentTrack);
+        if (!historyTracker.shouldRecord(
+          uid: uid,
+          position: position,
+          duration: audioPlayer.duration,
+        )) {
           return;
         }
 
-        scrobbler.scrobble(audioPlayerState.activeTrack!);
+        /// The [Track] from Playlist.getTracks doesn't contain artist images
+        /// so we try to fetch them from the API for remote tracks. Local and
+        /// WebDAV tracks must never depend on an online metadata plugin.
+        var historyTrack = prepareTrackForPlaybackHistory(currentTrack);
+        if (historyTrack is! SpotubeLocalTrackObject &&
+            historyTrack.artists.any((artist) => artist.images == null)) {
+          try {
+            final metadataPlugin =
+                await ref.read(metadataPluginProvider.future);
+            if (metadataPlugin != null) {
+              final artists = await Future.wait(
+                historyTrack.artists.map((artist) async {
+                  if (artist.images != null) return artist;
+                  try {
+                    final fullArtist =
+                        await metadataPlugin.artist.getArtist(artist.id);
+                    return SpotubeSimpleArtistObject.fromJson(
+                      fullArtist.toJson(),
+                    );
+                  } catch (error, stack) {
+                    AppLogger.reportError(error, stack);
+                    return artist;
+                  }
+                }),
+              );
+              historyTrack = historyTrack.copyWith(artists: artists);
+            }
+          } catch (error, stack) {
+            AppLogger.reportError(error, stack);
+          }
+        }
+        historyTrack = ensurePlaybackHistoryArtistImages(historyTrack);
+
+        // Local history is the source of truth for the statistics page. Only
+        // mark this listen as handled after the database write succeeds.
+        await history.addTrack(historyTrack);
+        historyTracker.markRecorded(uid);
+
+        scrobbler.scrobble(currentTrack);
         ref
             .read(metadataPluginScrobbleProvider.notifier)
-            .scrobble(audioPlayerState.activeTrack!);
-        lastScrobbled = uid;
-
-        /// The [Track] from Playlist.getTracks doesn't contain artist images
-        /// so we need to fetch them from the API
-        var activeTrack = audioPlayerState.activeTrack!;
-        if (activeTrack.artists.any((a) => a.images == null)) {
-          final metadataPlugin = await ref.read(metadataPluginProvider.future);
-          final artists = await Future.wait(
-            activeTrack.artists
-                .map((artist) => metadataPlugin!.artist.getArtist(artist.id)),
-          );
-          activeTrack = activeTrack.copyWith(
-            artists: artists
-                .map((e) => SpotubeSimpleArtistObject.fromJson(e.toJson()))
-                .toList(),
-          );
-        }
-
-        await history.addTrack(activeTrack);
+            .scrobble(currentTrack);
       } catch (e, stack) {
+        if (uid != null) historyTracker.markFailed(uid);
         AppLogger.reportError(e, stack);
       }
     });

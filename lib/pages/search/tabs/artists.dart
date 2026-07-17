@@ -13,6 +13,7 @@ import 'package:spotube/modules/artist/artist_card.dart';
 import 'package:spotube/modules/search/loading.dart';
 import 'package:spotube/pages/search/search.dart';
 import 'package:spotube/provider/metadata_plugin/search/artists.dart';
+import 'package:spotube/utils/platform.dart';
 
 class SearchPageArtistsTab extends HookConsumerWidget {
   const SearchPageArtistsTab({super.key});
@@ -42,6 +43,7 @@ class SearchPageArtistsTab extends HookConsumerWidget {
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: LayoutBuilder(builder: (context, constrains) {
+          final windowsStage = kIsWindows && constrains.lgAndUp;
           if (searchArtistsSnapshot.hasValue && searchArtists.isEmpty) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -67,10 +69,14 @@ class SearchPageArtistsTab extends HookConsumerWidget {
             padding: const EdgeInsets.all(16),
             itemCount: searchArtists.length + 1,
             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 200,
-              mainAxisExtent: constrains.smAndDown ? 225 : 250,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+              maxCrossAxisExtent: windowsStage ? 220 : 200,
+              mainAxisExtent: windowsStage
+                  ? 280
+                  : constrains.smAndDown
+                      ? 225
+                      : 250,
+              crossAxisSpacing: windowsStage ? 16 : 8,
+              mainAxisSpacing: windowsStage ? 16 : 8,
             ),
             itemBuilder: (context, index) {
               if (searchArtists.isNotEmpty && index == searchArtists.length) {

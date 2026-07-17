@@ -10,6 +10,7 @@ class SpotubeTrackObject with _$SpotubeTrackObject {
     required SpotubeSimpleAlbumObject album,
     required int durationMs,
     required String path,
+    String? webDavAccountId,
   }) = SpotubeLocalTrackObject;
 
   factory SpotubeTrackObject.full({

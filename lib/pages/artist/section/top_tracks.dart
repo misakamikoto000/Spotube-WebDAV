@@ -13,6 +13,7 @@ import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/connect/connect.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/metadata_plugin/artist/top_tracks.dart';
+import 'package:spotube/utils/platform.dart';
 
 class ArtistPageTopTracks extends HookConsumerWidget {
   final String artistId;
@@ -21,6 +22,7 @@ class ArtistPageTopTracks extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final theme = Theme.of(context);
+    final windowsStage = useImmersiveUi(context);
     final isLoading = useState(false);
 
     final playlist = ref.watch(audioPlayerProvider);
@@ -94,7 +96,7 @@ class ArtistPageTopTracks extends HookConsumerWidget {
       }
     }
 
-    return SliverMainAxisGroup(
+    final section = SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
           child: Row(
@@ -169,5 +171,12 @@ class ArtistPageTopTracks extends HookConsumerWidget {
         ),
       ],
     );
+
+    return windowsStage
+        ? SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            sliver: section,
+          )
+        : section;
   }
 }

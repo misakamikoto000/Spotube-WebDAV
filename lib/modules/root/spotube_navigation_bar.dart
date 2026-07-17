@@ -13,6 +13,7 @@ import 'package:spotube/extensions/context.dart';
 import 'package:spotube/models/database/database.dart';
 import 'package:spotube/provider/download_manager_provider.dart';
 import 'package:spotube/provider/user_preferences/user_preferences_provider.dart';
+import 'package:spotube/utils/platform.dart';
 
 final navigationPanelHeight = StateProvider<double>((ref) => 50);
 
@@ -55,36 +56,52 @@ class SpotubeNavigationBar extends HookConsumerWidget {
       return const SizedBox();
     }
 
+    final navigation = NavigationBar(
+      index: selectedIndex,
+      surfaceBlur: kIsAndroid ? 0 : context.theme.surfaceBlur,
+      surfaceOpacity: kIsAndroid ? 0 : context.theme.surfaceOpacity,
+      children: [
+        for (final tile in navbarTileList)
+          NavigationButton(
+            style: navbarTileList[selectedIndex] == tile
+                ? const ButtonStyle.fixed(density: ButtonDensity.icon)
+                : const ButtonStyle.muted(density: ButtonDensity.icon),
+            child: Badge(
+              isLabelVisible: tile.id == "library" && downloadCount > 0,
+              label: Text(downloadCount.toString()),
+              child: Icon(tile.icon),
+            ),
+            onPressed: () {
+              context.navigateTo(tile.route);
+            },
+          )
+      ],
+    );
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 100),
       height: panelHeight,
       child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const Divider(),
-            NavigationBar(
-              index: selectedIndex,
-              surfaceBlur: context.theme.surfaceBlur,
-              surfaceOpacity: context.theme.surfaceOpacity,
-              children: [
-                for (final tile in navbarTileList)
-                  NavigationButton(
-                    style: navbarTileList[selectedIndex] == tile
-                        ? const ButtonStyle.fixed(density: ButtonDensity.icon)
-                        : const ButtonStyle.muted(density: ButtonDensity.icon),
-                    child: Badge(
-                      isLabelVisible: tile.id == "library" && downloadCount > 0,
-                      label: Text(downloadCount.toString()),
-                      child: Icon(tile.icon),
-                    ),
-                    onPressed: () {
-                      context.navigateTo(tile.route);
-                    },
-                  )
-              ],
-            ),
-          ],
-        ),
+        child: kIsAndroid
+            ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: SurfaceCard(
+                  padding: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(18),
+                  borderColor: const Color(0x32FFFFFF),
+                  borderWidth: 1,
+                  fillColor: const Color(0xE70A0D16),
+                  surfaceOpacity: 0.78,
+                  surfaceBlur: 24,
+                  child: navigation,
+                ),
+              )
+            : Column(
+                children: [
+                  const Divider(),
+                  navigation,
+                ],
+              ),
       ),
     );
   }

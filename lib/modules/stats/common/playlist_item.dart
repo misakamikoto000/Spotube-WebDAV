@@ -5,6 +5,7 @@ import 'package:spotube/components/image/universal_image.dart';
 import 'package:spotube/components/ui/button_tile.dart';
 import 'package:spotube/extensions/string.dart';
 import 'package:spotube/models/metadata/metadata.dart';
+import 'package:spotube/modules/stats/common/stats_item_frame.dart';
 
 class StatsPlaylistItem extends StatelessWidget {
   final SpotubeSimplePlaylistObject playlist;
@@ -14,28 +15,31 @@ class StatsPlaylistItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ButtonTile(
-      style: ButtonVariance.ghost,
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: UniversalImage(
-          path: (playlist.images).asUrlString(
-            placeholder: ImagePlaceholder.collection,
+    return StatsItemFrame(
+      child: ButtonTile(
+        style: ButtonVariance.ghost,
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: UniversalImage(
+            path: (playlist.images).asUrlString(
+              placeholder: ImagePlaceholder.collection,
+            ),
+            width: 40,
+            height: 40,
           ),
-          width: 40,
-          height: 40,
         ),
+        title: Text(playlist.name),
+        subtitle: Text(
+          playlist.description.unescapeHtml(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: info,
+        onPressed: () {
+          context
+              .navigateTo(PlaylistRoute(id: playlist.id, playlist: playlist));
+        },
       ),
-      title: Text(playlist.name),
-      subtitle: Text(
-        playlist.description.unescapeHtml(),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: info,
-      onPressed: () {
-        context.navigateTo(PlaylistRoute(id: playlist.id, playlist: playlist));
-      },
     );
   }
 }

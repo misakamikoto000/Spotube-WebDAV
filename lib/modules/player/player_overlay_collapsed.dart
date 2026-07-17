@@ -9,6 +9,7 @@ import 'package:spotube/modules/root/spotube_navigation_bar.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/audio_player/querying_track_info.dart';
 import 'package:spotube/services/audio_player/audio_player.dart';
+import 'package:spotube/utils/platform.dart';
 
 class PlayerOverlayCollapsedSection extends HookConsumerWidget {
   final PanelController panelController;
@@ -40,10 +41,24 @@ class PlayerOverlayCollapsedSection extends HookConsumerWidget {
           ? Padding(
               padding: const EdgeInsets.all(5),
               child: SurfaceCard(
-                surfaceBlur: theme.surfaceBlur,
-                surfaceOpacity: theme.surfaceOpacity,
+                surfaceBlur: kIsAndroid ? 26 : theme.surfaceBlur,
+                surfaceOpacity: kIsAndroid ? 0.78 : theme.surfaceOpacity,
                 padding: EdgeInsets.zero,
-                borderRadius: theme.borderRadiusLg,
+                borderRadius: kIsAndroid
+                    ? BorderRadius.circular(18)
+                    : theme.borderRadiusLg,
+                borderColor: kIsAndroid ? const Color(0x38FFFFFF) : null,
+                borderWidth: kIsAndroid ? 1 : 0,
+                fillColor: kIsAndroid ? const Color(0xE80A0D16) : null,
+                boxShadow: kIsAndroid
+                    ? const [
+                        BoxShadow(
+                          color: Color(0x70000000),
+                          blurRadius: 26,
+                          offset: Offset(0, 12),
+                        ),
+                      ]
+                    : null,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

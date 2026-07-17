@@ -10,6 +10,8 @@ import 'package:spotube/extensions/context.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 
 import 'package:spotube/provider/blacklist_provider.dart';
+import 'package:spotube/provider/local_library/local_library_catalog.dart';
+import 'package:spotube/utils/platform.dart';
 
 class ArtistCard extends HookConsumerWidget {
   final SpotubeFullArtistObject artist;
@@ -30,19 +32,34 @@ class ArtistCard extends HookConsumerWidget {
         ),
       ),
     );
+    final localLocation = ref.watch(
+      localLibraryCatalogProvider.select(
+        (catalog) => catalog.artistLocationsById[artist.id],
+      ),
+    );
+    final windowsStage = useImmersiveUi(context);
 
-    return SizedBox(
-      width: 180,
-      child: Button.card(
+    final card = SizedBox(
+      width: windowsStage ? 184 : 180,
+      child: Button(
+        style: windowsStage
+            ? ButtonVariance.card.copyWith(
+                padding: (context, states, value) => const EdgeInsets.all(12),
+              )
+            : ButtonVariance.card,
         onPressed: () {
-          context.navigateTo(ArtistRoute(artistId: artist.id));
+          if (localLocation != null) {
+            context.navigateTo(LocalLibraryRoute(location: localLocation));
+          } else {
+            context.navigateTo(ArtistRoute(artistId: artist.id));
+          }
         },
         child: Column(
           children: [
             Avatar(
               initials: artist.name.trim()[0].toUpperCase(),
               provider: backgroundImage,
-              size: 130,
+              size: windowsStage ? 142 : 130,
             ),
             const Gap(10),
             AutoSizeText(
@@ -68,6 +85,54 @@ class ArtistCard extends HookConsumerWidget {
               ],
             )
           ],
+        ),
+      ),
+    );
+
+    return windowsStage ? _WindowsArtistFrame(child: card) : card;
+  }
+}
+
+class _WindowsArtistFrame extends StatefulWidget {
+  final Widget child;
+
+  const _WindowsArtistFrame({required this.child});
+
+  @override
+  State<_WindowsArtistFrame> createState() => _WindowsArtistFrameState();
+}
+
+class _WindowsArtistFrameState extends State<_WindowsArtistFrame> {
+  bool hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return MouseRegion(
+      onEnter: (_) => setState(() => hovered = true),
+      onExit: (_) => setState(() => hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: hovered ? primary.withAlpha(78) : const Color(0x1FFFFFFF),
+          ),
+          boxShadow: hovered
+              ? [
+                  BoxShadow(
+                    color: primary.withAlpha(28),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  ),
+                ]
+              : null,
+        ),
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 180),
+          scale: hovered ? 1.015 : 1,
+          child: widget.child,
         ),
       ),
     );

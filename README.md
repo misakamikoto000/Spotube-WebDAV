@@ -24,6 +24,73 @@ Btw it's not just another Electron app 😉
 
 </div>
 
+## About this fork / 关于本分支
+
+This community fork extends Spotube with a local-first music library for
+Windows and Android. It is based on Spotube `5.1.2+45`; the download links
+below still point to the official upstream releases and do not include these
+fork-specific changes.
+
+本社区分支在 Spotube `5.1.2+45` 的基础上加入了面向 Windows 与 Android
+的本地优先音乐库。下方下载链接仍指向 Spotube 官方版本，不包含本分支功能。
+
+### Fork highlights / 主要功能
+
+- WebDAV account management, directory browsing, selected-folder library
+  import, scanning, streaming and local playback proxying.
+- Local metadata scraping and caching for titles, artists, albums, artwork,
+  artist images and lyrics, without writing metadata back to WebDAV storage.
+- Multiple metadata strategies (QQ Music, iTunes and MusicBrainz), Simplified
+  Chinese normalization, unmatched-track filtering and per-field rematching.
+- Local albums, artists, playlists, browsing and listening statistics that do
+  not require a Spotify login.
+- Audio-quality probing and badges for lossy, lossless and Hi-Res tracks.
+- A desktop-focused Windows interface and a matching optimized Android UI.
+- WebDAV 账号与目录浏览、指定文件夹入库、扫描、串流及本地播放代理。
+- 标题、歌手、专辑、封面、歌手头像和歌词均在设备本地刮削与缓存，不回写网盘。
+- 支持 QQ 音乐、iTunes、MusicBrainz 等匹配策略，以及简体中文归一、未匹配筛选和单项重匹配。
+- 无需 Spotify 登录即可使用本地歌曲、专辑、歌手、歌单、浏览和听歌统计。
+- 识别有损、无损及 Hi-Res 音频并显示音质徽标。
+
+### Privacy / 隐私
+
+WebDAV server addresses, usernames and passwords are stored only in the app's
+local preferences. Scraped metadata, artwork and lyrics are also cached on the
+current device. Do not commit exported preferences, signing keys or personal
+cache data when contributing.
+
+WebDAV 地址、用户名和密码仅保存在应用本机配置中；刮削结果、封面和歌词也只缓存在当前设备。参与开发时请勿提交导出的应用配置、签名密钥或个人缓存。
+
+### Build this fork / 构建本分支
+
+Flutter `3.35.2` is pinned by FVM. From the repository root:
+
+```powershell
+fvm use 3.35.2
+fvm flutter pub get
+
+# Windows
+fvm flutter build windows --release
+
+# Android (APK)
+fvm flutter build apk --release --flavor stable
+```
+
+Android release builds use `android/key.properties` when a publishing key is
+available. Without it, local builds fall back to the debug signing key and
+must not be published to an app store.
+
+### Upstream and design acknowledgement / 上游与设计致谢
+
+- Core project: [KRTirtho/spotube](https://github.com/KRTirtho/spotube),
+  licensed under BSD-4-Clause.
+- The visual direction of the Windows interface was inspired by
+  [XxHuberrr/Mineradio](https://github.com/XxHuberrr/Mineradio). The interface
+  in this fork is implemented in Flutter; Mineradio is licensed under GPLv3.
+
+Bug reports for fork-specific features should be opened in this fork rather
+than in the upstream Spotube repository.
+
 ## 🌃 Features
 
 - 🧩 Plugin powered, supports any platform or custom music service through plugins.

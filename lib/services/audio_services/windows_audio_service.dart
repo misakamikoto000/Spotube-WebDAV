@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:path/path.dart' as path;
 import 'package:smtc_windows/smtc_windows.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
@@ -79,17 +81,35 @@ class WindowsAudioService {
     if (!smtc.enabled) {
       await smtc.enableSmtc();
     }
+    final thumbnail = track.album.images.asUrlString(
+      placeholder: ImagePlaceholder.albumArt,
+    );
     await smtc.updateMetadata(
       MusicMetadata(
         title: track.name,
         albumArtist: track.artists.firstOrNull?.name ?? "Unknown",
         artist: track.artists.asString(),
-        album: track.album?.name ?? "Unknown",
-        thumbnail: (track.album?.images).asUrlString(
-          placeholder: ImagePlaceholder.albumArt,
-        ),
+        album: track.album.name,
+        thumbnail: _absoluteThumbnailUri(thumbnail),
       ),
     );
+  }
+
+  static String _absoluteThumbnailUri(String value) {
+    final uri = Uri.tryParse(value);
+    if (uri != null && const {'http', 'https', 'file'}.contains(uri.scheme)) {
+      return uri.toString();
+    }
+
+    final filePath = value.startsWith('assets/')
+        ? path.join(
+            path.dirname(Platform.resolvedExecutable),
+            'data',
+            'flutter_assets',
+            value,
+          )
+        : File(value).absolute.path;
+    return Uri.file(filePath, windows: Platform.isWindows).toString();
   }
 
   void dispose() {

@@ -51,6 +51,105 @@ class BottomPlayer extends HookConsumerWidget {
       return PlayerOverlay(albumArt: albumArt);
     }
 
+    if (kIsWindows && mediaQuery.lgAndUp) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(252, 0, 16, 14),
+        child: SurfaceCard(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          borderRadius: BorderRadius.circular(22),
+          borderColor: const Color(0x36FFFFFF),
+          borderWidth: 1,
+          fillColor: const Color(0xEA0A0D16),
+          surfaceOpacity: 0.78,
+          surfaceBlur: 30,
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x80000000),
+              blurRadius: 38,
+              offset: Offset(0, 18),
+            ),
+          ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                flex: 3,
+                child: PlayerTrackDetails(track: playlist.activeTrack),
+              ),
+              const Expanded(
+                flex: 5,
+                child: Padding(
+                  padding: EdgeInsets.only(top: 3),
+                  child: PlayerControls(),
+                ),
+              ),
+              SizedBox(
+                width: 260,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PlayerActions(
+                      extraActions: [
+                        Tooltip(
+                          tooltip: TooltipContainer(
+                            child: Text(context.l10n.mini_player),
+                          ).call,
+                          child: IconButton(
+                            variance: ButtonVariance.ghost,
+                            icon: const Icon(SpotubeIcons.miniPlayer),
+                            onPressed: () async {
+                              if (!kIsDesktop) return;
+
+                              final prevSize = await windowManager.getSize();
+                              await windowManager.setMinimumSize(
+                                const Size(300, 300),
+                              );
+                              await windowManager.setAlwaysOnTop(true);
+                              if (!kIsLinux) {
+                                await windowManager.setHasShadow(false);
+                              }
+                              await windowManager
+                                  .setAlignment(Alignment.topRight);
+                              await windowManager.setSize(
+                                const Size(400, 500),
+                              );
+                              await Future.delayed(
+                                const Duration(milliseconds: 100),
+                                () async {
+                                  if (context.mounted) {
+                                    context.navigateTo(
+                                      MiniLyricsRoute(prevSize: prevSize),
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 34,
+                      child: Consumer(builder: (context, ref, _) {
+                        final volume = ref.watch(volumeProvider);
+                        return VolumeSlider(
+                          fullWidth: true,
+                          value: volume,
+                          onChanged: (value) {
+                            ref.read(volumeProvider.notifier).setVolume(value);
+                          },
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SurfaceCard(
       borderRadius: BorderRadius.zero,
       surfaceBlur: context.theme.surfaceBlur,

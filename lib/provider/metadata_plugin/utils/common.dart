@@ -13,6 +13,18 @@ extension PaginationExtension<T> on AsyncValue<T> {
   bool get isLoadingNextPage => this is AsyncData && this is AsyncLoadingNext;
 }
 
+SpotubePaginationResponseObject<T> emptyMetadataPagination<T>({
+  int limit = 20,
+}) {
+  return SpotubePaginationResponseObject<T>(
+    limit: limit,
+    nextOffset: null,
+    total: 0,
+    hasMore: false,
+    items: <T>[],
+  );
+}
+
 mixin MetadataPluginMixin<K>
 // ignore: invalid_use_of_internal_member
     on AsyncNotifierBase<SpotubePaginationResponseObject<K>> {

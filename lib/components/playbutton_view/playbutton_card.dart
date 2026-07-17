@@ -39,18 +39,35 @@ class PlaybuttonCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final unescapeHtml = description?.unescapeHtml().cleanHtml() ?? "";
     final scale = context.theme.scaling;
+    final windowsStage = useImmersiveUi(context);
+    final imageSize = (windowsStage ? 164 : 150) * scale;
+    final cardWidth = (windowsStage ? 176 : 150) * scale;
 
-    return SizedBox(
-      width: 150 * scale,
+    final card = SizedBox(
+      width: cardWidth,
       child: CardImage(
+        hoverScale: windowsStage ? 1.025 : null,
+        gap: windowsStage ? 10 : null,
         image: Stack(
           children: [
             if (imageUrl != null)
               Container(
-                width: 150 * scale,
-                height: 150 * scale,
+                width: imageSize,
+                height: imageSize,
                 decoration: BoxDecoration(
-                  borderRadius: context.theme.borderRadiusMd,
+                  borderRadius: BorderRadius.circular(windowsStage ? 16 : 6),
+                  border: windowsStage
+                      ? Border.all(color: const Color(0x2FFFFFFF))
+                      : null,
+                  boxShadow: windowsStage
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x59000000),
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ]
+                      : null,
                   image: DecorationImage(
                     image: UniversalImage.imageProvider(
                       imageUrl!,
@@ -63,10 +80,10 @@ class PlaybuttonCard extends StatelessWidget {
               )
             else
               SizedBox(
-                width: 150 * scale,
-                height: 150 * scale,
+                width: imageSize,
+                height: imageSize,
                 child: ClipRRect(
-                  borderRadius: context.theme.borderRadiusMd,
+                  borderRadius: BorderRadius.circular(windowsStage ? 16 : 6),
                   child: image!,
                 ),
               ),
@@ -164,6 +181,57 @@ class PlaybuttonCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         onPressed: onTap,
+      ),
+    );
+
+    return windowsStage ? _WindowsCardFrame(child: card) : card;
+  }
+}
+
+class _WindowsCardFrame extends StatefulWidget {
+  final Widget child;
+
+  const _WindowsCardFrame({required this.child});
+
+  @override
+  State<_WindowsCardFrame> createState() => _WindowsCardFrameState();
+}
+
+class _WindowsCardFrameState extends State<_WindowsCardFrame> {
+  bool hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return MouseRegion(
+      onEnter: (_) => setState(() => hovered = true),
+      onExit: (_) => setState(() => hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: hovered ? const Color(0x191D75FF) : const Color(0x10FFFFFF),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: hovered ? primary.withAlpha(82) : const Color(0x1FFFFFFF),
+          ),
+          boxShadow: hovered
+              ? [
+                  BoxShadow(
+                    color: primary.withAlpha(30),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  ),
+                ]
+              : null,
+        ),
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          scale: hovered ? 1.015 : 1,
+          child: widget.child,
+        ),
       ),
     );
   }

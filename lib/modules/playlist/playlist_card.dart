@@ -12,6 +12,7 @@ import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/audio_player/querying_track_info.dart';
 import 'package:spotube/provider/connect/connect.dart';
 import 'package:spotube/provider/history/history.dart';
+import 'package:spotube/provider/local_library/local_library_catalog.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/metadata_plugin/library/tracks.dart';
 import 'package:spotube/provider/metadata_plugin/tracks/playlist.dart';
@@ -38,6 +39,14 @@ class PlaylistCard extends HookConsumerWidget {
     final playlistNotifier = ref.watch(audioPlayerProvider.notifier);
     final isFetchingActiveTrack = ref.watch(queryingTrackInfoProvider);
     final historyNotifier = ref.read(playbackHistoryActionsProvider);
+    final localCollection = ref.watch(
+      localLibraryCatalogProvider.select((catalog) {
+        final location = catalog.playlistLocationsById[playlist.id];
+        return location == null
+            ? null
+            : catalog.collectionForLocation(location);
+      }),
+    );
 
     final playing =
         useStream(audioPlayer.playingStream).data ?? audioPlayer.isPlaying;
@@ -51,6 +60,7 @@ class PlaylistCard extends HookConsumerWidget {
     final me = ref.watch(metadataPluginUserProvider);
 
     final fetchInitialTracks = useCallback(() async {
+      if (localCollection != null) return localCollection.tracks;
       if (playlist.id == 'user-liked-tracks') {
         final tracks = await ref.read(metadataPluginSavedTracksProvider.future);
         return tracks.items;
@@ -60,9 +70,10 @@ class PlaylistCard extends HookConsumerWidget {
           .read(metadataPluginPlaylistTracksProvider(playlist.id).future);
 
       return result.items;
-    }, [playlist.id, ref]);
+    }, [playlist.id, localCollection, ref]);
 
     final fetchAllTracks = useCallback(() async {
+      if (localCollection != null) return localCollection.tracks;
       await fetchInitialTracks();
 
       if (playlist.id == 'user-liked-tracks') {
@@ -72,11 +83,16 @@ class PlaylistCard extends HookConsumerWidget {
       return ref
           .read(metadataPluginPlaylistTracksProvider(playlist.id).notifier)
           .fetchAll();
-    }, [playlist.id, ref, fetchInitialTracks]);
+    }, [playlist.id, localCollection, ref, fetchInitialTracks]);
 
     final onTap = useCallback(() {
-      context.navigateTo(PlaylistRoute(id: playlist.id, playlist: playlist));
-    }, [context, playlist]);
+      if (localCollection != null) {
+        context
+            .navigateTo(LocalLibraryRoute(location: localCollection.location));
+      } else {
+        context.navigateTo(PlaylistRoute(id: playlist.id, playlist: playlist));
+      }
+    }, [context, playlist, localCollection]);
 
     final onPlaybuttonPressed = useCallback(() async {
       try {
@@ -90,6 +106,13 @@ class PlaylistCard extends HookConsumerWidget {
         final fetchedInitialTracks = await fetchInitialTracks();
 
         if (fetchedInitialTracks.isEmpty || !context.mounted) return;
+
+        if (localCollection != null) {
+          await playlistNotifier.load(fetchedInitialTracks, autoPlay: true);
+          playlistNotifier.addCollection(playlist.id);
+          historyNotifier.addPlaylists([playlist]);
+          return;
+        }
 
         final isRemoteDevice = await showSelectDeviceDialog(context, ref);
         if (isRemoteDevice == null) return;
@@ -130,7 +153,8 @@ class PlaylistCard extends HookConsumerWidget {
       playlist.id,
       historyNotifier,
       playlist,
-      updating
+      updating,
+      localCollection,
     ]);
 
     final onAddToQueuePressed = useCallback(() async {

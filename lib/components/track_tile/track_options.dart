@@ -9,6 +9,7 @@ import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/track_options/track_options_provider.dart';
+import 'package:spotube/provider/webdav/webdav_library_provider.dart';
 
 /// [track] must be a [SpotubeFullTrackObject] or [SpotubeLocalTrackObject]
 class TrackOptions extends HookConsumerWidget {
@@ -44,14 +45,79 @@ class TrackOptions extends HookConsumerWidget {
       :isLiked,
       :downloadTask
     ) = ref.watch(trackOptionsStateProvider(track));
-    final isLocalTrack = track is SpotubeLocalTrackObject;
+    final localTrack = track is SpotubeLocalTrackObject
+        ? track as SpotubeLocalTrackObject
+        : null;
+    final isLocalTrack = localTrack != null;
+    final isLocalFile = localTrack?.webDavAccountId == null && isLocalTrack;
+    final isWebDavTrack = localTrack?.webDavAccountId != null;
+
+    Future<void> rematchWebDavTrack(
+      WebDavTrackRematchTarget target,
+    ) async {
+      final navigatorContext = rootNavigatorKey.currentContext!;
+      final library = ref.read(webDavLibraryProvider.notifier);
+      onTapItem?.call();
+      try {
+        final found = await library.rematchTrack(localTrack!, target);
+        if (!navigatorContext.mounted) return;
+        showToast(
+          context: navigatorContext,
+          location: ToastLocation.topRight,
+          builder: (context, overlay) => SurfaceCard(
+            child: Text(
+              found
+                  ? context.l10n.webdav_track_rematch_success(track.name)
+                  : context.l10n.webdav_track_rematch_not_found(track.name),
+            ),
+          ),
+        );
+      } catch (_) {
+        if (!navigatorContext.mounted) return;
+        showToast(
+          context: navigatorContext,
+          location: ToastLocation.topRight,
+          builder: (context, overlay) => SurfaceCard(
+            child: Text(
+              context.l10n.webdav_track_rematch_failed(track.name),
+            ),
+          ),
+        );
+      }
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 8,
       children: [
-        if (isLocalTrack)
+        if (isWebDavTrack) ...[
+          ButtonTile(
+            style: ButtonVariance.menu,
+            onPressed: () => rematchWebDavTrack(
+              WebDavTrackRematchTarget.information,
+            ),
+            leading: const Icon(SpotubeIcons.magic),
+            title: Text(context.l10n.webdav_rematch_track_information),
+          ),
+          ButtonTile(
+            style: ButtonVariance.menu,
+            onPressed: () => rematchWebDavTrack(
+              WebDavTrackRematchTarget.cover,
+            ),
+            leading: const Icon(SpotubeIcons.album),
+            title: Text(context.l10n.webdav_rematch_track_cover),
+          ),
+          ButtonTile(
+            style: ButtonVariance.menu,
+            onPressed: () => rematchWebDavTrack(
+              WebDavTrackRematchTarget.lyrics,
+            ),
+            leading: const Icon(SpotubeIcons.lyrics),
+            title: Text(context.l10n.webdav_rematch_track_lyrics),
+          ),
+        ],
+        if (isLocalFile)
           ButtonTile(
             style: ButtonVariance.menu,
             onPressed: () async {

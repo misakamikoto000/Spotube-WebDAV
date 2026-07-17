@@ -6,6 +6,7 @@ import 'package:spotube/components/ui/button_tile.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/modules/album/album_card.dart';
 import 'package:spotube/components/image/universal_image.dart';
+import 'package:spotube/modules/stats/common/stats_item_frame.dart';
 
 class StatsAlbumItem extends StatelessWidget {
   final SpotubeSimpleAlbumObject album;
@@ -14,37 +15,39 @@ class StatsAlbumItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ButtonTile(
-      style: ButtonVariance.ghost,
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: UniversalImage(
-          path: (album.images).asUrlString(
-            placeholder: ImagePlaceholder.albumArt,
-          ),
-          width: 40,
-          height: 40,
-        ),
-      ),
-      title: Text(album.name),
-      subtitle: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text("${album.albumType.formatted} • "),
-          Flexible(
-            child: ArtistLink(
-              artists: album.artists,
-              mainAxisAlignment: WrapAlignment.start,
-              onOverflowArtistClick: () =>
-                  context.navigateTo(AlbumRoute(id: album.id, album: album)),
+    return StatsItemFrame(
+      child: ButtonTile(
+        style: ButtonVariance.ghost,
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: UniversalImage(
+            path: (album.images).asUrlString(
+              placeholder: ImagePlaceholder.albumArt,
             ),
+            width: 40,
+            height: 40,
           ),
-        ],
+        ),
+        title: Text(album.name),
+        subtitle: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("${album.albumType.formatted} • "),
+            Flexible(
+              child: ArtistLink(
+                artists: album.artists,
+                mainAxisAlignment: WrapAlignment.start,
+                onOverflowArtistClick: () =>
+                    context.navigateTo(AlbumRoute(id: album.id, album: album)),
+              ),
+            ),
+          ],
+        ),
+        trailing: info,
+        onPressed: () {
+          context.navigateTo(AlbumRoute(id: album.id, album: album));
+        },
       ),
-      trailing: info,
-      onPressed: () {
-        context.navigateTo(AlbumRoute(id: album.id, album: album));
-      },
     );
   }
 }

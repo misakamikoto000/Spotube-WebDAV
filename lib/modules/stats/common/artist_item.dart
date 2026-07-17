@@ -4,6 +4,7 @@ import 'package:spotube/collections/routes.gr.dart';
 import 'package:spotube/components/image/universal_image.dart';
 import 'package:spotube/components/ui/button_tile.dart';
 import 'package:spotube/models/metadata/metadata.dart';
+import 'package:spotube/modules/stats/common/stats_item_frame.dart';
 
 class StatsArtistItem extends StatelessWidget {
   final SpotubeSimpleArtistObject artist;
@@ -16,21 +17,23 @@ class StatsArtistItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ButtonTile(
-      style: ButtonVariance.ghost,
-      title: Text(artist.name),
-      leading: Avatar(
-        initials: artist.name.substring(0, 1),
-        provider: UniversalImage.imageProvider(
-          (artist.images).asUrlString(
-            placeholder: ImagePlaceholder.artist,
+    return StatsItemFrame(
+      child: ButtonTile(
+        style: ButtonVariance.ghost,
+        title: Text(artist.name),
+        leading: Avatar(
+          initials: artist.name.substring(0, 1),
+          provider: UniversalImage.imageProvider(
+            (artist.images).asUrlString(
+              placeholder: ImagePlaceholder.artist,
+            ),
           ),
         ),
+        trailing: info,
+        onPressed: () {
+          context.navigateTo(ArtistRoute(artistId: artist.id));
+        },
       ),
-      trailing: info,
-      onPressed: () {
-        context.navigateTo(ArtistRoute(artistId: artist.id));
-      },
     );
   }
 }

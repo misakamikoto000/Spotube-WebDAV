@@ -114,6 +114,7 @@ dependencies:
   wikipedia_api: ^0.1.0
   win32_registry: ^1.1.5
   window_manager: ^0.4.3
+  xml: ^6.5.0
   youtube_explode_dart: ^3.1.0
   yt_dlp_dart:
     git:

@@ -28,6 +28,10 @@ def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+def hasReleaseSigningKey = keystorePropertiesFile.exists() &&
+    ['keyAlias', 'keyPassword', 'storeFile', 'storePassword'].every {
+        keystoreProperties[it] != null && !keystoreProperties[it].toString().isEmpty()
+    }
 
 def composeVersion = "1.4.8"
 
@@ -70,20 +74,25 @@ android {
     }
 
     signingConfigs {
-        release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-            storePassword keystoreProperties['storePassword']
+        if (hasReleaseSigningKey) {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            // Local forks can still produce an installable release APK when
+            // no publishing keystore is available. Store releases must provide
+            // android/key.properties and use their permanent signing key.
+            signingConfig hasReleaseSigningKey ? signingConfigs.release : signingConfigs.debug
         }
         debug {
-            signingConfig signingConfigs.release
+            signingConfig hasReleaseSigningKey ? signingConfigs.release : signingConfigs.debug
         }
     }
 
@@ -95,19 +104,19 @@ android {
             resValue "string", "app_name_en", "Spotube Nightly"
             applicationIdSuffix ".nightly"
             versionNameSuffix "-nightly"
-            signingConfig signingConfigs.release
+            signingConfig hasReleaseSigningKey ? signingConfigs.release : signingConfigs.debug
         }
         dev {
             dimension "default"
             resValue "string", "app_name_en", "Spotube Dev"
             applicationIdSuffix ".dev"
             versionNameSuffix "-dev"
-            signingConfig signingConfigs.release
+            signingConfig hasReleaseSigningKey ? signingConfigs.release : signingConfigs.debug
         }
         stable {
             dimension "default"
             resValue "string", "app_name_en", "Spotube"
-            signingConfig signingConfigs.release
+            signingConfig hasReleaseSigningKey ? signingConfigs.release : signingConfigs.debug
         }
     }
 

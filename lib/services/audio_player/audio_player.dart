@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:media_kit/media_kit.dart' as mk;
 
 import 'package:spotube/services/audio_player/playback_state.dart';
+import 'package:spotube/services/webdav/webdav_stream_proxy.dart';
 import 'package:spotube/utils/platform.dart';
 
 part 'audio_players_streams_mixin.dart';
@@ -27,13 +28,19 @@ class SpotubeMedia extends mk.Media {
           track is SpotubeLocalTrackObject || track is SpotubeFullTrackObject,
           "Track must be a either a local track or a full track object with ISRC",
         ),
-        // If the track is a local track, use its path, otherwise use the server URL
         super(
-          track is SpotubeLocalTrackObject
-              ? track.path
-              : "http://$_host:$serverPort/stream/${track.id}",
+          _playbackUri(track),
           extras: track.toJson(),
         );
+
+  static String _playbackUri(SpotubeTrackObject track) {
+    if (track case SpotubeLocalTrackObject(webDavAccountId: final accountId?)) {
+      final encoded = WebDavStreamProxy.encodeRemoteUri(Uri.parse(track.path));
+      return 'http://$_host:$serverPort/webdav/$accountId/$encoded';
+    }
+    if (track is SpotubeLocalTrackObject) return track.path;
+    return 'http://$_host:$serverPort/stream/${track.id}';
+  }
 
   factory SpotubeMedia.media(Media media) {
     assert(media.extras != null, "[Media] must have extra metadata set");

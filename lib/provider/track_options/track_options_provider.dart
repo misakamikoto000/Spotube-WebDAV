@@ -143,7 +143,9 @@ class TrackOptionsActions {
         );
         break;
       case TrackOptionValue.delete:
-        await File((track as SpotubeLocalTrackObject).path).delete();
+        final localTrack = track as SpotubeLocalTrackObject;
+        if (localTrack.webDavAccountId != null) break;
+        await File(localTrack.path).delete();
         ref.invalidate(localTracksProvider);
         break;
       case TrackOptionValue.addToQueue:

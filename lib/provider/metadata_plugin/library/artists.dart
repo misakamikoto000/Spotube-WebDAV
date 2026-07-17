@@ -1,5 +1,6 @@
 import 'package:riverpod/riverpod.dart';
 import 'package:spotube/models/metadata/metadata.dart';
+import 'package:spotube/provider/local_library/local_library_catalog.dart';
 import 'package:spotube/provider/metadata_plugin/core/auth.dart';
 import 'package:spotube/provider/metadata_plugin/utils/paginated.dart';
 
@@ -20,7 +21,22 @@ class MetadataPluginSavedArtistNotifier
 
   @override
   build() async {
-    await ref.watch(metadataPluginAuthenticatedProvider.future);
+    final localCatalog = ref.watch(localLibraryCatalogProvider);
+    final authenticated =
+        await ref.watch(metadataPluginAuthenticatedProvider.future);
+    if (!authenticated) {
+      final items = localCatalog.artists
+          .map((collection) => collection.item)
+          .toList(growable: false);
+      return SpotubePaginationResponseObject<SpotubeFullArtistObject>(
+        limit: items.length,
+        nextOffset: null,
+        total: items.length,
+        hasMore: false,
+        items: items,
+      );
+    }
+    await metadataPlugin;
     return await fetch(0, 20);
   }
 

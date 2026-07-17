@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/database/database.dart';
+import 'package:spotube/provider/history/history_utils.dart';
 import 'package:spotube/provider/history/top.dart';
 import 'package:spotube/provider/metadata_plugin/utils/family_paginated.dart';
 
@@ -14,8 +15,7 @@ class HistoryTopAlbumsNotifier extends FamilyPaginatedAsyncNotifier<
     PlaybackHistoryAlbum, HistoryDuration> {
   HistoryTopAlbumsNotifier() : super();
 
-  Selectable<SpotubeSimpleAlbumObject> createAlbumsQuery(
-      {int? limit, int? offset}) {
+  Selectable<SpotubeSimpleAlbumObject> createAlbumsQuery() {
     final database = ref.read(databaseProvider);
 
     final duration = switch (arg) {
@@ -53,7 +53,6 @@ class HistoryTopAlbumsNotifier extends FamilyPaginatedAsyncNotifier<
         WHERE type = 'album' AND
               created_at >= $duration
         ORDER BY created_at desc
-        ${limit != null && offset != null ? 'LIMIT $limit OFFSET $offset' : ''}
       """,
       readsFrom: {database.historyTable},
     ).map((row) {
@@ -65,16 +64,15 @@ class HistoryTopAlbumsNotifier extends FamilyPaginatedAsyncNotifier<
 
   @override
   fetch(offset, limit) async {
-    final albumsQuery = createAlbumsQuery(limit: limit, offset: offset);
-
-    final items = getAlbumsWithCount(await albumsQuery.get());
+    final allItems = getAlbumsWithCount(await createAlbumsQuery().get());
+    final items = allItems.skip(offset).take(limit).toList(growable: false);
 
     return SpotubePaginationResponseObject(
       items: items,
       limit: limit,
-      hasMore: items.length == limit,
+      hasMore: offset + items.length < allItems.length,
       nextOffset: (offset + limit).toInt(),
-      total: items.length,
+      total: allItems.length,
     );
   }
 
@@ -82,9 +80,14 @@ class HistoryTopAlbumsNotifier extends FamilyPaginatedAsyncNotifier<
   build(arg) async {
     final subscription = createAlbumsQuery().watch().listen((event) {
       if (state.asData == null) return;
+      final allItems = getAlbumsWithCount(event);
+      final visibleCount = state.asData!.value.items.length;
+      final items = allItems.take(visibleCount).toList(growable: false);
       state = AsyncData(state.asData!.value.copyWith(
-        items: getAlbumsWithCount(event),
-        hasMore: false,
+        items: items,
+        total: allItems.length,
+        nextOffset: items.length,
+        hasMore: items.length < allItems.length,
       ));
     });
 
@@ -98,7 +101,7 @@ class HistoryTopAlbumsNotifier extends FamilyPaginatedAsyncNotifier<
   List<PlaybackHistoryAlbum> getAlbumsWithCount(
     List<SpotubeSimpleAlbumObject> albumsWithTrackAlbums,
   ) {
-    return groupBy(albumsWithTrackAlbums, (album) => album.id)
+    return groupBy(albumsWithTrackAlbums, playbackHistoryAlbumKey)
         .entries
         .map((entry) {
           return (count: entry.value.length, album: entry.value.first);

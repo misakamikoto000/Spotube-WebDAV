@@ -19,6 +19,7 @@ import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/extensions/string.dart';
 import 'package:spotube/hooks/controllers/use_shadcn_text_editing_controller.dart';
 import 'package:spotube/models/metadata/metadata.dart';
+import 'package:spotube/models/webdav/webdav_account.dart';
 import 'package:spotube/modules/library/local_folder/cache_export_dialog.dart';
 import 'package:spotube/pages/library/user_local_tracks/user_local_tracks.dart';
 import 'package:spotube/components/expandable_search/expandable_search.dart';
@@ -28,8 +29,13 @@ import 'package:spotube/components/track_presentation/sort_tracks_dropdown.dart'
 import 'package:spotube/components/track_tile/track_tile.dart';
 import 'package:spotube/extensions/context.dart';
 import 'package:spotube/provider/local_tracks/local_tracks_provider.dart';
+import 'package:spotube/provider/local_library/local_library_catalog.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
 import 'package:spotube/provider/user_preferences/user_preferences_provider.dart';
+import 'package:spotube/provider/webdav/webdav_accounts_provider.dart';
+import 'package:spotube/provider/webdav/webdav_library_provider.dart';
+import 'package:spotube/services/webdav/webdav_metadata_status.dart';
+import 'package:spotube/utils/platform.dart';
 import 'package:spotube/utils/service_utils.dart';
 import 'package:auto_route/auto_route.dart';
 
@@ -107,12 +113,38 @@ class LocalLibraryPage extends HookConsumerWidget {
     final sortBy = useState<SortBy>(SortBy.none);
     final playlist = ref.watch(audioPlayerProvider);
     final trackSnapshot = ref.watch(localTracksProvider);
-    final isPlaylistPlaying = useMemoized(
-      () => playlist.containsTracks(
-        trackSnapshot.asData?.value[location] ?? [],
-      ),
-      [playlist, trackSnapshot, location],
-    );
+    final localCatalog = ref.watch(localLibraryCatalogProvider);
+    final localCollection = localCatalog.collectionForLocation(location);
+    final webDavAccountId =
+        location.startsWith('webdav://') ? Uri.tryParse(location)?.host : null;
+    final initialUnmatchedFilter = webDavAccountId != null &&
+        ref
+            .read(webDavUnmatchedFilterRequestProvider)
+            .contains(webDavAccountId);
+    final unmatchedOnly = useState(initialUnmatchedFilter);
+    final rematchingUnmatched = useState(false);
+    final webDavAccounts = ref.watch(webDavAccountsProvider);
+    WebDavAccount? webDavAccount;
+    for (final account in webDavAccounts) {
+      if (account.id == webDavAccountId) {
+        webDavAccount = account;
+        break;
+      }
+    }
+    final metadataJob = webDavAccountId == null
+        ? null
+        : ref.watch(
+            webDavMetadataJobProvider.select(
+              (jobs) => jobs[webDavAccountId],
+            ),
+          );
+    final allLocationTracks =
+        trackSnapshot.asData?.value[location] ?? <SpotubeLocalTrackObject>[];
+    final unmatchedCount = webDavUnmatchedTracks(allLocationTracks).length;
+    final actionTracks = unmatchedOnly.value
+        ? webDavUnmatchedTracks(allLocationTracks)
+        : allLocationTracks;
+    final isPlaylistPlaying = playlist.containsTracks(actionTracks);
 
     final searchController = useShadcnTextEditingController();
     useValueListenable(searchController);
@@ -121,7 +153,54 @@ class LocalLibraryPage extends HookConsumerWidget {
 
     final controller = useScrollController();
 
+    void showMessage(String message) {
+      showToast(
+        context: context,
+        location: ToastLocation.topRight,
+        builder: (context, overlay) => SurfaceCard(
+          child: Basic(title: Text(message)),
+        ),
+      );
+    }
+
+    Future<void> rematchUnmatched() async {
+      final account = webDavAccount;
+      if (account == null ||
+          unmatchedCount == 0 ||
+          rematchingUnmatched.value ||
+          metadataJob?.isMatching == true) {
+        if (unmatchedCount == 0) {
+          showMessage(context.l10n.webdav_no_unmatched_tracks);
+        }
+        return;
+      }
+      rematchingUnmatched.value = true;
+      try {
+        final summary = await ref
+            .read(webDavLibraryProvider.notifier)
+            .rematchUnmatchedMetadata(account);
+        if (context.mounted) {
+          if (summary.unmatched == 0 && summary.failed == 0) {
+            unmatchedOnly.value = false;
+          }
+          showMessage(
+            context.l10n.webdav_match_metadata_complete(
+              summary.matched,
+              summary.lyricsCached,
+              summary.unmatched,
+              summary.failed,
+            ),
+          );
+        }
+      } on Exception catch (error) {
+        if (context.mounted) showMessage(error.toString());
+      } finally {
+        if (context.mounted) rematchingUnmatched.value = false;
+      }
+    }
+
     final directorySize = useMemoized(() async {
+      if (localCollection != null) return null;
       final dir = Directory(location);
       final files = await dir.list(recursive: true).toList();
 
@@ -129,11 +208,12 @@ class LocalLibraryPage extends HookConsumerWidget {
           await Future.wait(files.whereType<File>().map((e) => e.length()));
 
       return (filesLength.sum.toInt() / pow(10, 9)).toStringAsFixed(2);
-    }, [location]);
+    }, [location, localCollection]);
 
     return SafeArea(
       bottom: false,
       child: Scaffold(
+        backgroundColor: kIsAndroid ? Colors.transparent : null,
         headers: [
           TitleBar(
             padding: const EdgeInsets.symmetric(
@@ -147,20 +227,28 @@ class LocalLibraryPage extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isDownloads
-                      ? context.l10n.downloads
-                      : isCache
-                          ? context.l10n.cache_folder.capitalize()
-                          : location,
+                  localCollection?.title ??
+                      (isDownloads
+                          ? context.l10n.downloads
+                          : isCache
+                              ? context.l10n.cache_folder.capitalize()
+                              : location),
                 ),
-                FutureBuilder<String>(
-                  future: directorySize,
-                  builder: (context, snapshot) {
-                    return Text(
-                      "${(snapshot.data ?? 0)} GB",
-                    ).xSmall().muted();
-                  },
-                )
+                if (localCollection != null)
+                  Text(
+                    context.l10n.webdav_scanned_tracks(
+                      localCollection.tracks.length,
+                    ),
+                  ).xSmall().muted()
+                else
+                  FutureBuilder<String?>(
+                    future: directorySize,
+                    builder: (context, snapshot) {
+                      return Text(
+                        "${(snapshot.data ?? 0)} GB",
+                      ).xSmall().muted();
+                    },
+                  )
               ],
             ),
             backgroundColor: Colors.transparent,
@@ -266,13 +354,11 @@ class LocalLibraryPage extends HookConsumerWidget {
                       child: IconButton.primary(
                         onPressed: trackSnapshot.asData?.value != null
                             ? () async {
-                                if (trackSnapshot.asData?.value.isNotEmpty ==
-                                    true) {
+                                if (actionTracks.isNotEmpty) {
                                   if (!isPlaylistPlaying) {
                                     await playLocalTracks(
                                       ref,
-                                      trackSnapshot.asData!.value[location] ??
-                                          [],
+                                      actionTracks,
                                     );
                                   }
                                 }
@@ -293,13 +379,11 @@ class LocalLibraryPage extends HookConsumerWidget {
                       child: IconButton.outline(
                         onPressed: trackSnapshot.asData?.value != null
                             ? () async {
-                                if (trackSnapshot.asData?.value.isNotEmpty ==
-                                    true) {
+                                if (actionTracks.isNotEmpty) {
                                   if (!isPlaylistPlaying) {
                                     await shufflePlayLocalTracks(
                                       ref,
-                                      trackSnapshot.asData!.value[location] ??
-                                          [],
+                                      actionTracks,
                                     );
                                   }
                                 }
@@ -317,14 +401,12 @@ class LocalLibraryPage extends HookConsumerWidget {
                       child: IconButton.outline(
                         onPressed: trackSnapshot.asData?.value != null
                             ? () async {
-                                if (trackSnapshot.asData?.value.isNotEmpty ==
-                                    true) {
+                                if (actionTracks.isNotEmpty) {
                                   if (!isPlaylistPlaying) {
                                     await addToQueueLocalTracks(
                                       context,
                                       ref,
-                                      trackSnapshot.asData!.value[location] ??
-                                          [],
+                                      actionTracks,
                                     );
                                   }
                                 }
@@ -334,6 +416,66 @@ class LocalLibraryPage extends HookConsumerWidget {
                         icon: const Icon(SpotubeIcons.queueAdd),
                       ),
                     ),
+                    if (webDavAccount != null) ...[
+                      const Gap(5),
+                      if (constraints.smAndDown)
+                        Tooltip(
+                          tooltip: TooltipContainer(
+                            child: Text(
+                              unmatchedOnly.value
+                                  ? context.l10n.webdav_show_all_tracks
+                                  : context.l10n
+                                      .webdav_filter_unmatched(unmatchedCount),
+                            ),
+                          ).call,
+                          child: unmatchedOnly.value
+                              ? IconButton.primary(
+                                  icon: const Icon(SpotubeIcons.filter),
+                                  onPressed: () => unmatchedOnly.value = false,
+                                )
+                              : IconButton.outline(
+                                  enabled: unmatchedCount > 0,
+                                  icon: const Icon(SpotubeIcons.filter),
+                                  onPressed: () => unmatchedOnly.value = true,
+                                ),
+                        )
+                      else
+                        Button(
+                          style: unmatchedOnly.value
+                              ? ButtonVariance.primary
+                              : ButtonVariance.outline,
+                          enabled: unmatchedCount > 0 || unmatchedOnly.value,
+                          leading: const Icon(SpotubeIcons.filter),
+                          onPressed: () {
+                            unmatchedOnly.value = !unmatchedOnly.value;
+                          },
+                          child: Text(
+                            unmatchedOnly.value
+                                ? context.l10n.webdav_show_all_tracks
+                                : context.l10n
+                                    .webdav_filter_unmatched(unmatchedCount),
+                          ),
+                        ),
+                      const Gap(5),
+                      Tooltip(
+                        tooltip: TooltipContainer(
+                          child: Text(context.l10n.webdav_rematch_unmatched),
+                        ).call,
+                        child: IconButton.outline(
+                          enabled: unmatchedCount > 0 &&
+                              !rematchingUnmatched.value &&
+                              metadataJob?.isMatching != true,
+                          icon: rematchingUnmatched.value ||
+                                  metadataJob?.isMatching == true
+                              ? const SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(),
+                                )
+                              : const Icon(SpotubeIcons.magic),
+                          onPressed: rematchUnmatched,
+                        ),
+                      ),
+                    ],
                     const Spacer(),
                     if (constraints.smAndDown)
                       ExpandableSearchButton(
@@ -387,10 +529,18 @@ class LocalLibraryPage extends HookConsumerWidget {
                     }, [sortBy.value, tracks]);
 
                     final filteredTracks = useMemoized(() {
+                      final baseTracks = unmatchedOnly.value
+                          ? sortedTracks
+                              .where(
+                                (track) =>
+                                    !webDavTrackHasMatchedMetadata(track),
+                              )
+                              .toList(growable: false)
+                          : sortedTracks;
                       if (searchController.text.isEmpty) {
-                        return sortedTracks;
+                        return baseTracks;
                       }
-                      return sortedTracks
+                      return baseTracks
                           .map((e) => (
                                 weightedRatio(
                                   "${e.name} - ${e.artists.asString()}",
@@ -406,7 +556,11 @@ class LocalLibraryPage extends HookConsumerWidget {
                           .map((e) => e.$2)
                           .toList()
                           .toList();
-                    }, [searchController.text, sortedTracks]);
+                    }, [
+                      searchController.text,
+                      sortedTracks,
+                      unmatchedOnly.value,
+                    ]);
 
                     if (!trackSnapshot.isLoading && filteredTracks.isEmpty) {
                       return Expanded(
@@ -463,7 +617,7 @@ class LocalLibraryPage extends HookConsumerWidget {
                                       onTap: () async {
                                         await playLocalTracks(
                                           ref,
-                                          sortedTracks,
+                                          filteredTracks,
                                           currentTrack: track,
                                         );
                                       },

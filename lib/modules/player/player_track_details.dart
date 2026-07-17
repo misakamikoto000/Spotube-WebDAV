@@ -8,9 +8,11 @@ import 'package:spotube/collections/routes.gr.dart';
 import 'package:spotube/components/image/universal_image.dart';
 import 'package:spotube/components/links/artist_link.dart';
 import 'package:spotube/components/links/link_text.dart';
+import 'package:spotube/components/track_quality/track_quality_badge.dart';
 import 'package:spotube/extensions/constrains.dart';
 import 'package:spotube/models/metadata/metadata.dart';
 import 'package:spotube/provider/audio_player/audio_player.dart';
+import 'package:spotube/utils/platform.dart';
 
 class PlayerTrackDetails extends HookConsumerWidget {
   final Color? color;
@@ -22,6 +24,7 @@ class PlayerTrackDetails extends HookConsumerWidget {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
     final playback = ref.watch(audioPlayerProvider);
+    final activeTrack = track ?? playback.activeTrack;
 
     return Row(
       children: [
@@ -66,21 +69,38 @@ class PlayerTrackDetails extends HookConsumerWidget {
           Flexible(
             flex: 1,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                LinkText(
-                  playback.activeTrack?.name ?? "",
-                  TrackRoute(trackId: playback.activeTrack?.id ?? ""),
-                  push: true,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                Row(
+                  children: [
+                    Expanded(
+                      child: LinkText(
+                        activeTrack?.name ?? "",
+                        TrackRoute(trackId: activeTrack?.id ?? ""),
+                        push: true,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    if (kIsWindows && activeTrack != null) ...[
+                      const SizedBox(width: 8),
+                      ActiveTrackQualityBadge(track: activeTrack),
+                    ],
+                  ],
                 ),
                 ArtistLink(
-                  artists: playback.activeTrack?.artists ?? [],
+                  artists: activeTrack?.artists ?? [],
                   onRouteChange: (route) {
                     context.router.navigateNamed(route);
                   },
-                  onOverflowArtistClick: () =>
-                      context.navigateTo(TrackRoute(trackId: track!.id)),
+                  onOverflowArtistClick: () {
+                    if (activeTrack != null) {
+                      context.navigateTo(TrackRoute(trackId: activeTrack.id));
+                    }
+                  },
                 )
               ],
             ),

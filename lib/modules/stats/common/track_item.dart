@@ -5,6 +5,7 @@ import 'package:spotube/components/image/universal_image.dart';
 import 'package:spotube/components/links/artist_link.dart';
 import 'package:spotube/components/ui/button_tile.dart';
 import 'package:spotube/models/metadata/metadata.dart';
+import 'package:spotube/modules/stats/common/stats_item_frame.dart';
 
 class StatsTrackItem extends StatelessWidget {
   final SpotubeTrackObject track;
@@ -17,7 +18,7 @@ class StatsTrackItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ButtonTile(
+    final tile = ButtonTile(
       style: ButtonVariance.ghost,
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(4),
@@ -42,5 +43,7 @@ class StatsTrackItem extends StatelessWidget {
         context.navigateTo(TrackRoute(trackId: track.id));
       },
     );
+
+    return StatsItemFrame(child: tile);
   }
 }
